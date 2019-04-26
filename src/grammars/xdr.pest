@@ -1,0 +1,45 @@
+STRUCT = {"struct"}
+UNION = {"union"}
+NAMESPACE = {"namespace"}
+CASE = {"case"}
+SWITCH = {"switch"}
+
+keywords = {
+    STRUCT |
+    UNION |
+    NAMESPACE |
+    CASE |
+    SWITCH
+}
+
+
+whitespace = _{ " " | "\t" | NEWLINE }
+lowercase = {'a' .. 'z'}
+uppercase = {'A' .. 'Z'}
+alpha = { lowercase | uppercase }
+num = { '0'..'9' }
+alpha_num = { alpha | num }
+id_char = { alpha_num | "_" }
+
+line_comment = _{ "//" ~ (!NEWLINE ~ ANY)* }
+
+long_comment = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/"}
+empty_space = _{whitespace | line_comment | long_comment }
+
+types = {
+    "string" |
+    "opaque" |
+    "unsigned hyper" |
+    "hyper"
+}
+
+var_array = { "<" ~ num* ~ ">" }
+fixed_array = { "[" ~ num+ ~ "]" }
+array_def = { var_array | fixed_array }
+type_decl = { ( types | identifier ) ~ whitespace ~ identifier ~ array_def? ~";" }
+
+identifier = {!keywords ~ alpha ~ alpha_num*}
+
+Struct = {STRUCT ~ whitespace+ ~ identifier ~ whitespace* ~ "{" ~ (empty_space | type_decl)* ~ "}" }
+namespace = { NAMESPACE ~ whitespace+ ~ identifier ~ whitespace* ~ "{" ~ (empty_space | Struct)* ~ "}"}
+file = { SOI ~ empty_space* ~ namespace ~ empty_space* ~ EOI}

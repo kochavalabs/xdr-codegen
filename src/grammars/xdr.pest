@@ -18,10 +18,15 @@ keywords = {
 
 
 types = {
+    "boolean" |
     "string" |
     "opaque" |
+    "integer" |
+    "unsigned integer" |
     "unsigned hyper" |
-    "hyper"
+    "hyper" |
+    "float" |
+    "double"
 }
 
 ws_no_nl = _{ " " | "\t" }

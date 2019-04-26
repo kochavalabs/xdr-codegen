@@ -1,6 +1,3 @@
-%#include "common.x"
-%#include "event.x"
-
 namespace mazzaroth
 {
   struct Receipt

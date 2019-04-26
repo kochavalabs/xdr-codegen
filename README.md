@@ -8,5 +8,5 @@ an AST.
 To run and see debug output for AST:
 
 ```bash
-cat idl/block.x  | cargo run
+cat test.x  | cargo run
 ```

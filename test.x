@@ -3,6 +3,12 @@
 
 namespace mazzaroth
 {
+
+  typedef opaque Signature[64];
+  typedef opaque ID[32];
+  typedef opaque Hash[32];
+  typedef opaque Parameter<>;
+
   // A transaction that calls a function on a user defined contract.
   struct Call
   {
@@ -23,16 +29,19 @@ namespace mazzaroth
 
   enum ActionCategoryType
   {
-    CALL = 0,
-    UPDATE = 1
+    NONE = 0,
+    CALL = 1,
+    UPDATE = 2
   };
 
   union ActionCategory switch (ActionCategoryType type)
   {
+    case NONE:
+      void;
     case CALL:
-        Call call;
+      Call call;
     case UPDATE:
-        Update update;
+      Update update;
   };
 
   // The Action data of a transaction

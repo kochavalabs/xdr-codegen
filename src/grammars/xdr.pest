@@ -17,6 +17,13 @@ keywords = {
 }
 
 
+types = {
+    "string" |
+    "opaque" |
+    "unsigned hyper" |
+    "hyper"
+}
+
 ws_no_nl = _{ " " | "\t" }
 whitespace = _{ ws_no_nl | NEWLINE }
 lowercase = {'a' .. 'z'}
@@ -26,31 +33,33 @@ num = { '0'..'9' }
 alpha_num = { alpha | num }
 id_char = { alpha_num | "_" }
 
-line_comment = _{ "//" ~ (!NEWLINE ~ ANY)* }
+
+line_comment = _{ ("//" | "%") ~ (!NEWLINE ~ ANY)* }
 
 long_comment = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/"}
 empty_space = _{whitespace | line_comment | long_comment }
 
-types = {
-    "string" |
-    "opaque" |
-    "unsigned hyper" |
-    "hyper"
-}
-
 var_array = { "<" ~ num* ~ ">" }
 fixed_array = { "[" ~ num+ ~ "]" }
 array_def = { var_array | fixed_array }
-identifier = {!keywords ~ alpha ~ alpha_num*}
+identifier = { !keywords ~ alpha ~ (alpha_num | "_")* }
 bracket_start = { ws_no_nl+ ~ identifier ~ whitespace* ~ "{" }
 id_equal = { identifier ~ ws_no_nl+ ~ "=" ~ ws_no_nl }
 end_bracket = {"}" ~ ";"?}
+single_param = { "(" ~ ws_no_nl* ~ identifier ~ ws_no_nl+ ~ identifier ~ ")" }
 
 type_decl = { ( types | identifier ) ~ ws_no_nl+ ~ identifier ~ array_def? ~";" }
 typedef = { TYPEDEF ~ whitespace+ ~ type_decl }
+casedef = { type_decl | "void;" }
 enum_decl = { id_equal ~ num+ ~ ws_no_nl* ~ ","? }
+case_statement = { CASE ~ ws_no_nl+ ~ identifier ~ ":" ~ NEWLINE ~ empty_space+ ~ casedef }
+switch_body = { empty_space | case_statement }
 
+switch = {SWITCH ~ ws_no_nl* ~ single_param ~ whitespace* ~ "{" ~ switch_body* ~ end_bracket}
+union = { UNION ~ ws_no_nl+ ~ identifier ~ ws_no_nl+ ~ switch }
 Struct = {STRUCT ~ bracket_start ~ (empty_space | type_decl)* ~ end_bracket }
 Enum = {ENUM ~ bracket_start ~ (empty_space | enum_decl)* ~ end_bracket }
-namespace = { NAMESPACE ~ bracket_start ~ (empty_space | Struct | typedef | Enum)* ~ end_bracket}
-file = { SOI ~ empty_space* ~ namespace ~ empty_space* ~ EOI}
+namespace = { NAMESPACE ~ bracket_start ~ (empty_space | Struct | typedef | Enum | union)* ~ end_bracket}
+
+
+file = { SOI ~ (empty_space* ~ namespace ~ empty_space*)+ ~ EOI}

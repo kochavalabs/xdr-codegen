@@ -3,13 +3,15 @@ UNION = {"union"}
 NAMESPACE = {"namespace"}
 CASE = {"case"}
 SWITCH = {"switch"}
+TYPEDEF = {"typedef"}
 
 keywords = {
     STRUCT |
     UNION |
     NAMESPACE |
     CASE |
-    SWITCH
+    SWITCH |
+    TYPEDEF
 }
 
 
@@ -36,10 +38,12 @@ types = {
 var_array = { "<" ~ num* ~ ">" }
 fixed_array = { "[" ~ num+ ~ "]" }
 array_def = { var_array | fixed_array }
-type_decl = { ( types | identifier ) ~ whitespace ~ identifier ~ array_def? ~";" }
-
 identifier = {!keywords ~ alpha ~ alpha_num*}
 
+type_decl = { ( types | identifier ) ~ whitespace+ ~ identifier ~ array_def? ~";" }
+typedef = { TYPEDEF ~ whitespace+ ~ type_decl }
+
+
 Struct = {STRUCT ~ whitespace+ ~ identifier ~ whitespace* ~ "{" ~ (empty_space | type_decl)* ~ "}" }
-namespace = { NAMESPACE ~ whitespace+ ~ identifier ~ whitespace* ~ "{" ~ (empty_space | Struct)* ~ "}"}
+namespace = { NAMESPACE ~ whitespace+ ~ identifier ~ whitespace* ~ "{" ~ (empty_space | Struct | typedef)* ~ "}"}
 file = { SOI ~ empty_space* ~ namespace ~ empty_space* ~ EOI}

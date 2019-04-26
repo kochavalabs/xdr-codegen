@@ -26,7 +26,8 @@ types = {
     "unsigned hyper" |
     "hyper" |
     "float" |
-    "double"
+    "double" |
+    "quad"
 }
 
 ws_no_nl = _{ " " | "\t" }

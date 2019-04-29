@@ -71,8 +71,7 @@ struct Namespace {
     //    unions: Vec<Union>,
 
     //    enums: Vec<Enum>,
-
-    //    structs: Vec<Struct>,
+    structs: Vec<Struct>,
 }
 
 trait CodeGenerator {
@@ -160,9 +159,32 @@ fn build_typedef(td: Pair<Rule>) -> Result<Typedef, &'static str> {
     Ok(Typedef { def: def })
 }
 
+fn build_struct(st: Pair<Rule>) -> Result<Struct, &'static str> {
+    let mut name: String = "".to_string();
+    let mut props: Vec<Def> = Vec::new();
+    for node in st.into_inner() {
+        match node.as_rule() {
+            Rule::bracket_start => {
+                name = name_from_bracket_start(node)?;
+            }
+            Rule::type_decl => {
+                let decl = build_def(node)?;
+                props.push(decl);
+            }
+            _ => {}
+        }
+    }
+
+    Ok(Struct {
+        name: name,
+        props: props,
+    })
+}
+
 fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
     let mut name: String = "".to_string();
     let mut typedefs: Vec<Typedef> = Vec::new();
+    let mut structs: Vec<Struct> = Vec::new();
     for node in ns.into_inner() {
         match node.as_rule() {
             Rule::bracket_start => {
@@ -172,6 +194,10 @@ fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
                 let def = build_typedef(node)?;
                 typedefs.push(def)
             }
+            Rule::Struct => {
+                let stru = build_struct(node)?;
+                structs.push(stru);
+            }
             _ => {}
         }
     }
@@ -179,6 +205,7 @@ fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
     Ok(Namespace {
         name: name,
         typedefs: typedefs,
+        structs: structs,
     })
 }
 

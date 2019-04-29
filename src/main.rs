@@ -51,8 +51,17 @@ struct Struct {
 }
 
 #[derive(Debug, Default)]
+struct EnumValue {
+    name: String,
+
+    index: i32,
+}
+
+#[derive(Debug, Default)]
 struct Enum {
-    values: Vec<(String, i32)>,
+    name: String,
+
+    values: Vec<EnumValue>,
 }
 
 #[derive(Debug, Default)]
@@ -68,9 +77,10 @@ struct Namespace {
     name: String,
 
     typedefs: Vec<Typedef>,
-    //    unions: Vec<Union>,
 
-    //    enums: Vec<Enum>,
+    //    unions: Vec<Union>,
+    enums: Vec<Enum>,
+
     structs: Vec<Struct>,
 }
 
@@ -133,6 +143,7 @@ fn build_def(d: Pair<Rule>) -> Result<Def, &'static str> {
                 fixed_array = f;
                 array_size = a;
             }
+
             _ => {}
         }
     }
@@ -181,10 +192,54 @@ fn build_struct(st: Pair<Rule>) -> Result<Struct, &'static str> {
     })
 }
 
+fn build_enum_val(en: Pair<Rule>) -> Result<EnumValue, &'static str> {
+    let mut name: String = "".to_string();
+    let mut index: i32 = 0;
+    for node in en.into_inner() {
+        match node.as_rule() {
+            Rule::identifier => {
+                name = node.as_str().to_string();
+            }
+            Rule::num_p => {
+                index = node.as_str().parse::<i32>().unwrap();
+            }
+            _ => {}
+        }
+    }
+
+    Ok(EnumValue {
+        name: name,
+        index: index,
+    })
+}
+
+fn build_enum(en: Pair<Rule>) -> Result<Enum, &'static str> {
+    let mut name: String = "".to_string();
+    let mut values: Vec<EnumValue> = Vec::new();
+    for node in en.into_inner() {
+        match node.as_rule() {
+            Rule::bracket_start => {
+                name = name_from_bracket_start(node)?;
+            }
+            Rule::enum_decl => {
+                let val = build_enum_val(node)?;
+                values.push(val);
+            }
+            _ => {}
+        }
+    }
+
+    Ok(Enum {
+        name: name,
+        values: values,
+    })
+}
+
 fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
     let mut name: String = "".to_string();
     let mut typedefs: Vec<Typedef> = Vec::new();
     let mut structs: Vec<Struct> = Vec::new();
+    let mut enums: Vec<Enum> = Vec::new();
     for node in ns.into_inner() {
         match node.as_rule() {
             Rule::bracket_start => {
@@ -198,6 +253,10 @@ fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
                 let stru = build_struct(node)?;
                 structs.push(stru);
             }
+            Rule::Enum => {
+                let enu = build_enum(node)?;
+                enums.push(enu);
+            }
             _ => {}
         }
     }
@@ -206,6 +265,7 @@ fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
         name: name,
         typedefs: typedefs,
         structs: structs,
+        enums: enums,
     })
 }
 

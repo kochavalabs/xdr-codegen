@@ -65,7 +65,27 @@ struct Enum {
 }
 
 #[derive(Debug, Default)]
-struct Union {}
+struct Switch {
+    enum_name: String,
+
+    enum_type: String,
+
+    cases: Vec<Case>,
+}
+
+#[derive(Debug, Default)]
+struct Union {
+    name: String,
+
+    switch: Switch,
+}
+
+#[derive(Debug, Default)]
+struct Case {
+    value: String,
+
+    ret_type: Def,
+}
 
 #[derive(Debug, Default)]
 struct Typedef {
@@ -78,7 +98,8 @@ struct Namespace {
 
     typedefs: Vec<Typedef>,
 
-    //    unions: Vec<Union>,
+    unions: Vec<Union>,
+
     enums: Vec<Enum>,
 
     structs: Vec<Struct>,
@@ -235,11 +256,100 @@ fn build_enum(en: Pair<Rule>) -> Result<Enum, &'static str> {
     })
 }
 
+fn build_case(ca: Pair<Rule>) -> Result<Case, &'static str> {
+    let mut value: String = "".to_string();
+    let mut def = Def::default();
+    def.name = "void".to_string();
+    for node in ca.into_inner() {
+        match node.as_rule() {
+            Rule::identifier => {
+                value = node.as_str().to_string();
+            }
+            Rule::type_decl => {
+                def = build_def(node)?;
+            }
+            _ => {}
+        }
+    }
+    Ok(Case {
+        value: value,
+        ret_type: def,
+    })
+}
+
+fn build_switch(sw: Pair<Rule>) -> Result<Switch, &'static str> {
+    let mut enum_name: String = "".to_string();
+    let mut enum_type: String = "".to_string();
+    let mut cases: Vec<Case> = Vec::new();
+    for node in sw.into_inner() {
+        match node.as_rule() {
+            Rule::single_param => {
+                let type_id = type_id_from_single_param(node)?;
+                enum_type = type_id.0;
+                enum_name = type_id.1;
+            }
+            Rule::case_statement => {
+                let cas = build_case(node)?;
+                cases.push(cas);
+            }
+            _ => {}
+        }
+    }
+
+    Ok(Switch {
+        enum_name: enum_name,
+        enum_type: enum_type,
+        cases: cases,
+    })
+}
+
+fn type_id_from_single_param(pa: Pair<Rule>) -> Result<(String, String), &'static str> {
+    let mut sw_type: String = "".to_string();
+    let mut id: String = "".to_string();
+    let mut id_count = 0;
+    for node in pa.into_inner() {
+        match (node.as_rule(), id_count) {
+            (Rule::identifier, 0) => {
+                sw_type = node.as_str().to_string();
+                id_count += 1;
+            }
+            (Rule::identifier, 1) => {
+                id = node.as_str().to_string();
+            }
+            _ => {}
+        }
+    }
+    Ok((sw_type, id))
+}
+
+fn build_union(un: Pair<Rule>) -> Result<Union, &'static str> {
+    let mut name: String = "".to_string();
+    let mut switch: Switch = Switch::default();
+    for node in un.into_inner() {
+        match node.as_rule() {
+            Rule::identifier => {
+                name = node.as_str().to_string();
+            }
+            Rule::switch => {
+                switch = build_switch(node)?;
+            }
+            Rule::enum_decl => {}
+            _ => {}
+        }
+    }
+
+    Ok(Union {
+        name: name,
+        switch: switch,
+    })
+}
+
 fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
     let mut name: String = "".to_string();
     let mut typedefs: Vec<Typedef> = Vec::new();
     let mut structs: Vec<Struct> = Vec::new();
     let mut enums: Vec<Enum> = Vec::new();
+    let mut unions: Vec<Union> = Vec::new();
     for node in ns.into_inner() {
         match node.as_rule() {
             Rule::bracket_start => {
@@ -257,6 +367,10 @@ fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
                 let enu = build_enum(node)?;
                 enums.push(enu);
             }
+            Rule::union => {
+                let uni = build_union(node)?;
+                unions.push(uni);
+            }
             _ => {}
         }
     }
@@ -266,6 +380,7 @@ fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
         typedefs: typedefs,
         structs: structs,
         enums: enums,
+        unions: unions,
     })
 }
 

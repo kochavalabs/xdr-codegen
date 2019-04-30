@@ -5,6 +5,7 @@ CASE = {"case"}
 SWITCH = {"switch"}
 TYPEDEF = {"typedef"}
 ENUM = {"enum"}
+VOID = {"void"}
 
 keywords = {
     STRUCT |
@@ -13,7 +14,8 @@ keywords = {
     CASE |
     SWITCH |
     TYPEDEF |
-    ENUM
+    ENUM |
+    VOID
 }
 
 
@@ -56,12 +58,10 @@ single_param = { "(" ~ ws_no_nl* ~ identifier ~ ws_no_nl+ ~ identifier ~ ")" }
 
 type_decl = { ( types | identifier ) ~ ws_no_nl+ ~ identifier ~ array_def? ~";" }
 typedef = { TYPEDEF ~ whitespace+ ~ type_decl }
-casedef = { type_decl | "void;" }
 enum_decl = { identifier ~ ws_no_nl+ ~ "=" ~ ws_no_nl ~ num_p ~ ws_no_nl* ~ ","? }
-case_statement = { CASE ~ ws_no_nl+ ~ identifier ~ ":" ~ NEWLINE ~ empty_space+ ~ casedef }
-switch_body = { empty_space | case_statement }
+case_statement = { CASE ~ ws_no_nl+ ~ identifier ~ ":" ~ NEWLINE ~ empty_space+ ~ (type_decl | VOID ~ ";") }
 
-switch = {SWITCH ~ ws_no_nl* ~ single_param ~ whitespace* ~ "{" ~ switch_body* ~ end_bracket}
+switch = {SWITCH ~ ws_no_nl* ~ single_param ~ whitespace* ~ "{" ~ (empty_space | case_statement)* ~ end_bracket}
 union = { UNION ~ ws_no_nl+ ~ identifier ~ ws_no_nl+ ~ switch }
 Struct = {STRUCT ~ bracket_start ~ (empty_space | type_decl)* ~ end_bracket }
 Enum = {ENUM ~ bracket_start ~ (empty_space | enum_decl)* ~ end_bracket }

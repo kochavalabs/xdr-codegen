@@ -1,86 +1,81 @@
 use pest::iterators::Pair;
 use pest::Parser;
+
 #[derive(Parser)]
 #[grammar = "grammars/xdr.pest"]
 pub struct XDRParser;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct Def {
-    name: String,
+    pub name: String,
 
-    type_name: String,
+    pub type_name: String,
 
-    fixed_array: bool,
+    pub fixed_array: bool,
 
-    array_size: i32,
+    pub array_size: i32,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct Struct {
-    name: String,
+    pub name: String,
 
-    props: Vec<Def>,
+    pub props: Vec<Def>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct EnumValue {
-    name: String,
+    pub name: String,
 
-    index: i32,
+    pub index: i32,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct Enum {
-    name: String,
+    pub name: String,
 
-    values: Vec<EnumValue>,
+    pub values: Vec<EnumValue>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct Switch {
-    enum_name: String,
+    pub enum_name: String,
 
-    enum_type: String,
+    pub enum_type: String,
 
-    cases: Vec<Case>,
+    pub cases: Vec<Case>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct Union {
-    name: String,
+    pub name: String,
 
-    switch: Switch,
+    pub switch: Switch,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct Case {
-    value: String,
+    pub value: String,
 
-    ret_type: Def,
+    pub ret_type: Def,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct Typedef {
-    def: Def,
+    pub def: Def,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct Namespace {
-    name: String,
+    pub name: String,
 
-    typedefs: Vec<Typedef>,
+    pub typedefs: Vec<Typedef>,
 
-    unions: Vec<Union>,
+    pub unions: Vec<Union>,
 
-    enums: Vec<Enum>,
+    pub enums: Vec<Enum>,
 
-    structs: Vec<Struct>,
-}
-
-trait CodeGenerator {
-    fn gen_code(&self, namespaces: Vec<Namespace>) -> String;
-
-    fn gen_language(&self) -> String;
+    pub structs: Vec<Struct>,
 }
 
 fn name_from_bracket_start(bs: Pair<Rule>) -> Result<String, &'static str> {

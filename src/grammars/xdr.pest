@@ -25,8 +25,8 @@ types = {
     "opaque" |
     "integer" |
     "unsigned integer" |
-    "unsigned hyper" |
     "hyper" |
+    "unsigned hyper" |
     "float" |
     "double" |
     "quad"

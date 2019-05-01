@@ -1,8 +1,9 @@
-extern crate structopt;
 extern crate pest;
+extern crate structopt;
 
-#[macro_use]
-extern crate pest_derive;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate handlebars;
+#[macro_use] extern crate pest_derive;
 
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -12,6 +13,9 @@ use std::fs::File;
 use std::io::{self, Read};
 
 mod ast;
+mod generator;
+
+use generator::CodeGenerator;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "xdrgen", about = "CLI tool for generating xdr code.")]
@@ -47,7 +51,8 @@ fn main() -> io::Result<()> {
         }
     }
 
-    println!("{:?}", ast::build_namespaces(buffer));
+    let generator = generator::go::GoGenerator{};
+    println!("{}", generator.code(ast::build_namespaces(buffer).unwrap()).unwrap());
     Ok(())
 }
 

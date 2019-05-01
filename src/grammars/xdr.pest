@@ -4,6 +4,7 @@ NAMESPACE = {"namespace"}
 CASE = {"case"}
 SWITCH = {"switch"}
 TYPEDEF = {"typedef"}
+TYPE = {"type"}
 ENUM = {"enum"}
 VOID = {"void"}
 
@@ -15,7 +16,8 @@ keywords = {
     SWITCH |
     TYPEDEF |
     ENUM |
-    VOID
+    VOID |
+    TYPE
 }
 
 

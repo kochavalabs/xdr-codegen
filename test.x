@@ -34,7 +34,7 @@ namespace mazzaroth
     UPDATE = 2
   };
 
-  union ActionCategory switch (ActionCategoryType type)
+  union ActionCategory switch (ActionCategoryType Type)
   {
     case NONE:
       Call call;

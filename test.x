@@ -37,7 +37,7 @@ namespace mazzaroth
   union ActionCategory switch (ActionCategoryType Type)
   {
     case NONE:
-      Call call;
+      void;
     case CALL:
       Call call;
     case UPDATE:

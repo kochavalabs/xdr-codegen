@@ -74,12 +74,12 @@ type {{st.name}} struct {
 {{#each st.props as |prop|}}
 {{#if prop.array_size}}
 {{#if prop.fixed_array}}
-  {{prop.type_name}}  {{#if (neqstr prop.type_name) }}[{{prop.array_size}}]{{/if}}{{prop.name}}
+  {{prop.name}}  {{#if (neqstr prop.type_name) }}[{{prop.array_size}}]{{/if}}{{prop.type_name}}
 {{else}}
   {{prop.name}} {{#if (neqstr prop.type_name)}}[]{{/if}}{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}"`
 {{/if}}
 {{else}}
-  {{prop.type_name}}  {{prop.name}}
+  {{prop.name}}  {{prop.type_name}}
 {{/if}}
 {{/each~}}
 }
@@ -130,7 +130,7 @@ func (s {{enum.name}}) ValidEnum(v int32) bool {
 }
 // String returns the name of `e`
 func (s {{enum.name}}) String() string {
-  name, _ := {{enum.name}}Map[int32(e)]
+  name, _ := {{enum.name}}Map[int32(s)]
   return name
 }
 
@@ -161,7 +161,9 @@ static UNION_T: &str = r#"
 type {{uni.name}} struct{
   {{uni.switch.enum_name}} {{uni.switch.enum_type}}
 {{#each uni.switch.cases as |case|}}
+{{#if (not (isvoid case.ret_type.name))}}
   {{case.ret_type.name}} *{{case.ret_type.type_name}}
+{{/if}}
 {{/each~}}
 }
 
@@ -174,36 +176,39 @@ func (u {{uni.name}}) SwitchFieldName() string {
 // ArmForSwitch returns which field name should be used for storing
 // the value for an instance of {{uni.name}}
 func (u {{uni.name}}) ArmForSwitch(sw int32) (string, bool) {
-switch {{uni.case.enum_type}}(sw) {
+switch {{uni.switch.enum_type}}(sw) {
 {{#each uni.switch.cases as |case|}}
   case {{uni.switch.enum_type}}{{case.value}}:
-    return "{{case.value}}", true
+    return "{{case.ret_type.name}}", true
 {{/each~}}
 }
 return "-", false
 }
 
 // New{{uni.name}} creates a new  {{uni.name}}.
-func New{{uni.name}}(aType {{uni.enum_type}}, value interface{}) (result {{uni.name}}, err error) {
+func New{{uni.name}}(aType {{uni.switch.enum_type}}, value interface{}) (result {{uni.name}}, err error) {
   result.Type = aType
 switch {{uni.enum_type}}(aType) {
 {{#each uni.switch.cases as |case|}}
   case {{uni.switch.enum_type}}{{case.value}}:
+{{#if (not (isvoid case.ret_type.name))}}
     tv, ok := value.({{case.ret_type.type_name}})
     if !ok {
         err = fmt.Errorf("invalid value, must be {{case.ret_type}}")
         return
     }
     result.{{case.ret_type.name}} = &tv
+{{/if}}
 {{/each~}}
 }
   return
 }
 
 {{#each uni.switch.cases as |case|}}
+{{#if (not (isvoid case.ret_type.name))}}
 // Must{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // panicing if the value is not set.
-func (u {{uni.name}}) Must{{case.ret_type.name}}() uint64 {
+func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
   val, ok := u.Get{{case.ret_type.name}}()
 
   if !ok {
@@ -215,7 +220,7 @@ func (u {{uni.name}}) Must{{case.ret_type.name}}() uint64 {
 
 // Get{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // returning ok if the union's switch indicated the value is valid.
-func (u {{uni.name}}) Get{{case.ret_type.name}}() (result uint64, ok bool) {
+func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
   armName, _ := u.ArmForSwitch(int32(u.Type))
 
   if armName == "{{case.ret_type.name}}" {
@@ -225,6 +230,7 @@ func (u {{uni.name}}) Get{{case.ret_type.name}}() (result uint64, ok bool) {
 
   return
 }
+{{/if}}
 {{/each~}}
 
 // MarshalBinary implements encoding.BinaryMarshaler.
@@ -308,6 +314,13 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
 
         for uni_i in 0..ret_val[n_i].unions.len() {
             for case_i in 0..ret_val[n_i].unions[uni_i].switch.cases.len() {
+                if ret_val[n_i].unions[uni_i].switch.cases[case_i]
+                    .ret_type
+                    .name
+                    == "".to_string()
+                {
+                    continue;
+                }
                 ret_val[n_i].unions[uni_i].switch.cases[case_i]
                     .ret_type
                     .name = format!(
@@ -347,7 +360,9 @@ impl CodeGenerator for GoGenerator {
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
         handlebars_helper!(neqstr: |x: str| x != "string");
+        handlebars_helper!(isvoid: |x: str| x == "");
         reg.register_helper("neqstr", Box::new(neqstr));
+        reg.register_helper("isvoid", Box::new(isvoid));
         let processed_ns = process_namespaces(namespaces)?;
         let result = reg
             .render_template(file_t.into_boxed_str().as_ref(), &processed_ns)

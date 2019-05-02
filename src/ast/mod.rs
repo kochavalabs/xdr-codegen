@@ -226,7 +226,6 @@ fn build_enum(en: Pair<Rule>) -> Result<Enum, &'static str> {
 fn build_case(ca: Pair<Rule>) -> Result<Case, &'static str> {
     let mut value: String = "".to_string();
     let mut def = Def::default();
-    def.name = "void".to_string();
     for node in ca.into_inner() {
         match node.as_rule() {
             Rule::identifier => {

@@ -278,7 +278,7 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
     type_map.insert("unsigned hyper", "uint64");
     type_map.insert("float", "float32");
     type_map.insert("double", "float64");
-    let mut ret_val = namespaces.clone();
+    let mut ret_val = apply_type_map(namespaces, type_map)?;
     for n_i in 0..ret_val.len() {
         for td_i in 0..ret_val[n_i].typedefs.len() {
             ret_val[n_i].typedefs[td_i].def.name = format!(
@@ -287,12 +287,6 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
                 &ret_val[n_i].typedefs[td_i].def.name
                     [1..ret_val[n_i].typedefs[td_i].def.name.len()]
             );
-            match type_map.get(&ret_val[n_i].typedefs[td_i].def.type_name[..]) {
-                Some(&val) => {
-                    ret_val[n_i].typedefs[td_i].def.type_name = val.to_string();
-                }
-                _ => {}
-            }
         }
         for str_i in 0..ret_val[n_i].structs.len() {
             for st_def_i in 0..ret_val[n_i].structs[str_i].props.len() {
@@ -302,13 +296,6 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
                     &ret_val[n_i].structs[str_i].props[st_def_i].name
                         [1..ret_val[n_i].structs[str_i].props[st_def_i].name.len()]
                 );
-
-                match type_map.get(&ret_val[n_i].structs[str_i].props[st_def_i].type_name[..]) {
-                    Some(&val) => {
-                        ret_val[n_i].structs[str_i].props[st_def_i].type_name = val.to_string();
-                    }
-                    _ => {}
-                }
             }
         }
 
@@ -336,23 +323,11 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
                         .name
                         .len()]
                 );
-                match type_map.get(
-                    &ret_val[n_i].unions[uni_i].switch.cases[case_i]
-                        .ret_type
-                        .type_name[..],
-                ) {
-                    Some(&val) => {
-                        ret_val[n_i].unions[uni_i].switch.cases[case_i]
-                            .ret_type
-                            .type_name = val.to_string();
-                    }
-                    _ => {}
-                }
             }
         }
     }
 
-    Ok(ret_val.clone())
+    Ok(ret_val)
 }
 
 impl CodeGenerator for GoGenerator {

@@ -127,7 +127,7 @@ impl CodeGenerator for JsGenerator {
         type_map.insert("boolean", "bool");
         type_map.insert("integer", "int");
         type_map.insert("unsigned integer", "uint");
-        type_map.insert("unsigned hyper", "hyper");
+        type_map.insert("unsigned hyper", "uhyper");
         let processed = apply_type_map(namespaces, type_map)?;
         let mut reg = Handlebars::new();
         let file_t = build_file_template();

@@ -65,10 +65,10 @@ namespace mazzaroth
 
     // Byte array representing the id of the sender, this also happens
     // to be the sender's account public key.
-    ID address;
+    ID address[12];
 
     // The action data for this transaction
-    Action action;
+    Action action<3>;
   };
 
 

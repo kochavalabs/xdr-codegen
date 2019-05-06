@@ -1,4 +1,5 @@
 /target
 **/*.rs.bk
 test_generated.js
+test_generated.go
 _test.js

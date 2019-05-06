@@ -36,13 +36,13 @@ static TYPEDEFS_T: &str = r#"
 {{#if td.def.array_size}}
 {{#if td.def.fixed_array}}
 type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[{{td.def.array_size}}]{{/if}}{{td.def.type_name}}
-{{else}}
-type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{/if}}{{td.def.type_name}}
-{{/if}}
 // XDRMaxSize implements the Sized interface for {{td.def.name}}
 func (s {{td.def.name}}) XDRMaxSize() int {
   return {{td.def.array_size}}
 }
+{{else}}
+type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{/if}}{{td.def.type_name}}
+{{/if}}
 {{/if}}
 
 // MarshalBinary implements encoding.BinaryMarshaler.
@@ -76,7 +76,8 @@ type {{st.name}} struct {
 {{#if prop.fixed_array}}
   {{prop.name}}  {{#if (neqstr prop.type_name) }}[{{prop.array_size}}]{{/if}}{{prop.type_name}}
 {{else}}
-  {{prop.name}} {{#if (neqstr prop.type_name)}}[]{{/if}}{{prop.type_name}} {{#if prop.fixed_array}}`xdrmaxsize:"{{prop.array_size}}"`{{/if}}
+  {{prop.name}} {{#if (neqstr prop.type_name)}}[]{{/if}}{{prop.type_name ~}}
+  {{#if (ne prop.array_size 2147483647) }}  `xdrmaxsize:"{{prop.array_size}}"` {{/if}}
 {{/if}}
 {{else}}
   {{prop.name}}  {{prop.type_name}}

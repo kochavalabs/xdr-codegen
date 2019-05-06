@@ -16,7 +16,7 @@ static TYPEDEFS_T: &str = r#"
 // Start typedef section
 {{#each ns.typedefs as |td| ~}}
 
-xdr.typedef("{{td.def.name}}", xdr.{{td.def.type_name}}(32));
+xdr.typedef("{{td.def.name}}", {{#typeconv td.def.name td.def.type_name td.def.array_size td.def.fixed_array}}{{/typeconv}});
 
 {{/each~}}
 // End typedef section
@@ -132,6 +132,7 @@ impl CodeGenerator for JsGenerator {
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
         handlebars_helper!(typeconv: |name: str, typ: str, size: i64, fixed: bool| match (name, typ, size, fixed) {
+            (_, "opaque", _, false) => format!("xdr.varOpaque()"),
             (_, typ, size, _) if is_built_in_single(typ) && size == 0 => format!("xdr.{}()", typ),
             (_, typ, size, fixed) if is_built_in_single(typ) && size > 0 && fixed => format!("xdr.varArray(xdr.{}(), {})", typ, size),
             (_, typ, size, _) if is_built_in_single(typ) && size > 0 => format!("xdr.array(xdr.{}(), {})", typ, size),

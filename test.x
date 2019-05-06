@@ -86,7 +86,7 @@ namespace mazzaroth
     ID receiptId[12];
 
     // The transaction merkle root after adding this transaction to the merkle tree, for validation
-    Hash currentTransactionRoot;
+    Hash currentTransactionRoot<23>;
 
      // Consensus signatures
     Signature signatures<>;

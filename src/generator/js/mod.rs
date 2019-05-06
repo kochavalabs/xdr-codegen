@@ -133,11 +133,11 @@ impl CodeGenerator for JsGenerator {
         let file_t = build_file_template();
         handlebars_helper!(typeconv: |name: str, typ: str, size: i64, fixed: bool| match (name, typ, size, fixed) {
             (_, "opaque", _, false) => format!("xdr.varOpaque()"),
+            (_, typ, size, false) if is_built_in_single(typ) && size > 0 => format!("xdr.varArray(xdr.{}(), {})", typ, size),
+            (_, typ, size, false) if !is_array_type(typ) && size > 0 => format!("xdr.varArray(xdr.lookup(\"{}\"), {})", typ, size),
             (_, typ, size, _) if is_built_in_single(typ) && size == 0 => format!("xdr.{}()", typ),
-            (_, typ, size, fixed) if is_built_in_single(typ) && size > 0 && fixed => format!("xdr.varArray(xdr.{}(), {})", typ, size),
             (_, typ, size, _) if is_built_in_single(typ) && size > 0 => format!("xdr.array(xdr.{}(), {})", typ, size),
             (_, typ, size, _) if !is_array_type(typ) && size == 0 => format!("xdr.lookup(\"{}\")", typ),
-            (_, typ, size, fixed) if !is_array_type(typ) && size > 0 && fixed => format!("xdr.varArray(xdr.lookup(\"{}\"), {})", typ, size),
             (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("xdr.array(xdr.lookup(\"{}\"), {})", typ, size),
             _ => format!("xdr.{}({})", typ, size)
         });

@@ -76,7 +76,7 @@ type {{st.name}} struct {
 {{#if prop.fixed_array}}
   {{prop.name}}  {{#if (neqstr prop.type_name) }}[{{prop.array_size}}]{{/if}}{{prop.type_name}}
 {{else}}
-  {{prop.name}} {{#if (neqstr prop.type_name)}}[]{{/if}}{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}"`
+  {{prop.name}} {{#if (neqstr prop.type_name)}}[]{{/if}}{{prop.type_name}} {{#if prop.fixed_array}}`xdrmaxsize:"{{prop.array_size}}"`{{/if}}
 {{/if}}
 {{else}}
   {{prop.name}}  {{prop.type_name}}

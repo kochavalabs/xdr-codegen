@@ -36,8 +36,8 @@ impl XDR for {{td.def.name}} {
         to_bytes(&self)
     }
 
-    fn from_xdr(&self, xdr: Vec<u8>) -> Result<{{td.def.name}}, Error> {
-        from_bytes(&xdr)
+    fn from_xdr(&self, xdr: &[u8]) -> Result<{{td.def.name}}, Error> {
+        from_bytes(xdr)
     }
 }
 
@@ -46,6 +46,35 @@ impl XDR for {{td.def.name}} {
 "#;
 
 static STRUCTS_T: &str = r#"
+// Start struct section
+{{#each ns.structs as |st|}}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct {{st.name}} {
+{{#each st.props as |prop|}}
+{{#if prop.array_size}}
+{{#if prop.fixed_array}}
+  {{prop.name}}: {{#if (neqstr prop.type_name) }}[{{prop.type_name}}; {{prop.array_size}}]{{/if}},
+{{else}}
+  {{prop.name}}: {{#if (neqstr prop.type_name) }}Vec<{{prop.type_name}}>{{else}} {{prop.type_name}} {{/if}},
+{{/if}}
+{{else}}
+  {{prop.name}}:  {{prop.type_name}},
+{{/if}}
+{{/each~}}
+}
+
+impl XDR for {{st.name}} {
+    fn to_xdr(&self) -> Result<Vec<u8>, Error> {
+        to_bytes(&self)
+    }
+
+    fn from_xdr(&self, xdr: &[u8]) -> Result<{{st.name}}, Error> {
+        from_bytes(xdr)
+    }
+}
+{{/each}}
+// End struct section
 "#;
 
 static ENUM_T: &str = r#"

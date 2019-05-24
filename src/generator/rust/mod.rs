@@ -78,6 +78,31 @@ impl XDR for {{st.name}} {
 "#;
 
 static ENUM_T: &str = r#"
+{{#each ns.enums as |enum|}}
+#[derive(Debug, Serialize, Deserialize)]
+enum {{enum.name}} {
+{{#each enum.values as |val|~}}
+    {{val.name}},
+{{/each~}}
+}
+
+impl Default for {{enum.name}} {
+    fn default() -> Self {
+        {{enum.name}}::{{enum.values.0.name}}
+    }
+}
+
+impl XDR for {{enum.name}} {
+    fn to_xdr(&self) -> Result<Vec<u8>, Error> {
+        to_bytes(&self)
+    }
+
+    fn from_xdr(&self, xdr: &[u8]) -> Result<{{enum.name}}, Error> {
+        from_bytes(xdr)
+    }
+}
+
+{{/each~}}
 "#;
 
 static UNION_T: &str = r#"

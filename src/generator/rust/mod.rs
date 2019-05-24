@@ -2,9 +2,6 @@ use super::*;
 use handlebars::Handlebars;
 
 static HEADER: &str = r#"
-#[macro_use]
-extern crate serde_derive;
-
 use rust_xdr::de::from_bytes;
 use rust_xdr::error::Error;
 use rust_xdr::ser::to_bytes;

@@ -106,6 +106,41 @@ impl XDR for {{enum.name}} {
 "#;
 
 static UNION_T: &str = r#"
+// Start union section
+
+{{#each ns.unions as |uni|}}
+#[derive(Debug, Serialize, Deserialize)]
+enum {{uni.name}} {
+{{#each uni.switch.cases as |case|}}
+{{#if (not (isvoid case.ret_type.name))}}
+  {{case.value}}({{case.ret_type.type_name}}),
+{{else}}
+  {{case.value}}(()),
+{{/if}}
+{{/each~}}
+}
+
+impl Default for {{uni.name}} {
+    fn default() -> Self {
+    {{#if (not (isvoid uni.switch.cases.0.ret_type.name))}}
+      {{uni.name}}::{{uni.switch.cases.0.value}}({{uni.switch.cases.0.ret_type.type_name}}::default())
+    {{else}}
+      {{uni.name}}::{{uni.switch.cases.0.value}}
+    {{/if}}
+    }
+}
+
+impl XDR for {{uni.name}} {
+    fn to_xdr(&self) -> Result<Vec<u8>, Error> {
+        to_bytes(&self)
+    }
+
+    fn from_xdr(&self, xdr: &[u8]) -> Result<{{uni.name}}, Error> {
+        from_bytes(xdr)
+    }
+}
+{{/each~}}
+// End union section
 "#;
 
 static FOOTER: &str = r#"

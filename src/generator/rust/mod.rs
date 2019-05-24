@@ -11,7 +11,7 @@ use rust_xdr::ser::to_bytes;
 
 pub trait XDR<T = Self> {
     fn to_xdr(&self) -> Result<Vec<u8>, Error>;
-    fn from_xdr(&self, xdr: Vec<u8>) -> Result<T, Error>;
+    fn from_xdr(&self, xdr: &[u8]) -> Result<T, Error>;
 }
 
 {{#each this as |ns| ~}}

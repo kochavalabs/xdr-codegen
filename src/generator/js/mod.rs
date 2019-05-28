@@ -125,8 +125,7 @@ impl CodeGenerator for JsGenerator {
     fn code(&self, namespaces: Vec<Namespace>) -> Result<String, &'static str> {
         let mut type_map = HashMap::new();
         type_map.insert("boolean", "bool");
-        type_map.insert("integer", "int");
-        type_map.insert("unsigned integer", "uint");
+        type_map.insert("unsigned int", "uint");
         type_map.insert("unsigned hyper", "uhyper");
         let processed = apply_type_map(namespaces, type_map)?;
         let mut reg = Handlebars::new();

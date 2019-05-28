@@ -274,8 +274,8 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
     let mut type_map = HashMap::new();
     type_map.insert("boolean", "bool");
     type_map.insert("opaque", "byte");
-    type_map.insert("integer", "int32");
-    type_map.insert("unsigned integer", "uint32");
+    type_map.insert("int", "int32");
+    type_map.insert("unsigned int", "uint32");
     type_map.insert("hyper", "int64");
     type_map.insert("unsigned hyper", "uint64");
     type_map.insert("float", "float32");

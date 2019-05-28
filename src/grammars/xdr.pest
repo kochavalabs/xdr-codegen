@@ -25,8 +25,8 @@ types = {
     "boolean" |
     "string" |
     "opaque" |
-    "integer" |
-    "unsigned integer" |
+    "int" |
+    "unsigned int" |
     "hyper" |
     "unsigned hyper" |
     "float" |

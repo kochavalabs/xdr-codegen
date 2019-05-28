@@ -54,6 +54,7 @@ fn main() -> io::Result<()> {
         Some(language) => match language.as_ref() {
             "go" => &generator::go::GoGenerator {},
             "js" => &generator::js::JsGenerator {},
+            "rust" => &generator::rust::RustGenerator {},
             _ => &generator::go::GoGenerator {},
         },
         _ => &generator::go::GoGenerator {},

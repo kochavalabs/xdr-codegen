@@ -257,6 +257,7 @@ var (
 
 static FOOTER: &str = r#"
 // Namspace end {{ns.name}}
+var fmtTest = fmt.Sprint("this is a dummy usage of fmt")
 {{/each~}}"#;
 
 #[derive(Debug, Default)]

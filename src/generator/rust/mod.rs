@@ -122,7 +122,7 @@ impl Default for {{uni.name}} {
     {{#if (not (isvoid uni.switch.cases.0.ret_type.name))}}
       {{uni.name}}::{{uni.switch.cases.0.value}}({{uni.switch.cases.0.ret_type.type_name}}::default())
     {{else}}
-      {{uni.name}}::{{uni.switch.cases.0.value}}
+      {{uni.name}}::{{uni.switch.cases.0.value}}(())
     {{/if}}
     }
 }

@@ -19,7 +19,6 @@ static TYPEDEFS_T: &str = r#"
 // Start typedef section
 
 {{#each ns.typedefs as |td| ~}}
-#[derive(Default, Debug, Serialize, Deserialize)]
 {{#if td.def.array_size~}}
 {{#if td.def.fixed_array~}}
 type {{td.def.name}} = {{#if (neqstr td.def.type_name) }}[{{td.def.type_name}}; {{td.def.array_size}}]{{/if}};

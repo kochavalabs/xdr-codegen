@@ -8,7 +8,7 @@ use rust_xdr::ser::to_bytes;
 
 pub trait XDR<T = Self> {
     fn to_xdr(&self) -> Result<Vec<u8>, Error>;
-    fn from_xdr(&self, xdr: &[u8]) -> Result<T, Error>;
+    fn from_xdr(xdr: &[u8]) -> Result<T, Error>;
 }
 
 {{#each this as |ns| ~}}
@@ -33,7 +33,7 @@ impl XDR for {{td.def.name}} {
         to_bytes(&self)
     }
 
-    fn from_xdr(&self, xdr: &[u8]) -> Result<{{td.def.name}}, Error> {
+    fn from_xdr(xdr: &[u8]) -> Result<{{td.def.name}}, Error> {
         from_bytes(xdr)
     }
 }
@@ -66,7 +66,7 @@ impl XDR for {{st.name}} {
         to_bytes(&self)
     }
 
-    fn from_xdr(&self, xdr: &[u8]) -> Result<{{st.name}}, Error> {
+    fn from_xdr(xdr: &[u8]) -> Result<{{st.name}}, Error> {
         from_bytes(xdr)
     }
 }
@@ -94,7 +94,7 @@ impl XDR for {{enum.name}} {
         to_bytes(&self)
     }
 
-    fn from_xdr(&self, xdr: &[u8]) -> Result<{{enum.name}}, Error> {
+    fn from_xdr(xdr: &[u8]) -> Result<{{enum.name}}, Error> {
         from_bytes(xdr)
     }
 }
@@ -132,7 +132,7 @@ impl XDR for {{uni.name}} {
         to_bytes(&self)
     }
 
-    fn from_xdr(&self, xdr: &[u8]) -> Result<{{uni.name}}, Error> {
+    fn from_xdr(xdr: &[u8]) -> Result<{{uni.name}}, Error> {
         from_bytes(xdr)
     }
 }

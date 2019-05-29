@@ -26,17 +26,6 @@ type {{td.def.name}} = {{#if (neqstr td.def.type_name) }}[{{td.def.type_name}}; 
 type {{td.def.name}} = {{#if (neqstr td.def.type_name) }}Vec<{{td.def.type_name}}>{{else}} {{td.def.type_name}} {{/if}};
 {{/if~}}
 {{/if}}
-
-impl XDR for {{td.def.name}} {
-    fn to_xdr(&self) -> Result<Vec<u8>, Error> {
-        to_bytes(&self)
-    }
-
-    fn from_xdr(xdr: &[u8]) -> Result<{{td.def.name}}, Error> {
-        from_bytes(xdr)
-    }
-}
-
 {{/each}}
 // End typedef section
 "#;

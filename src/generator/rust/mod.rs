@@ -2,14 +2,10 @@ use super::*;
 use handlebars::Handlebars;
 
 static HEADER: &str = r#"
-use rust_xdr::de::from_bytes;
-use rust_xdr::error::Error;
-use rust_xdr::ser::to_bytes;
-
-pub trait XDR<T = Self> {
-    fn to_xdr(&self) -> Result<Vec<u8>, Error>;
-    fn from_xdr(xdr: &[u8]) -> Result<T, Error>;
-}
+use ex_dee::de::{read_fixed_array, read_var_array, read_var_string, XDRIn};
+use ex_dee::error::Error;
+use ex_dee::ser::{write_fixed_array, write_var_array, write_var_string, XDROut};
+use std::io::{Read, Write};
 
 {{#each this as |ns| ~}}
 // Namspace start {{ns.name}}
@@ -20,11 +16,7 @@ static TYPEDEFS_T: &str = r#"
 
 {{#each ns.typedefs as |td| ~}}
 {{#if td.def.array_size~}}
-{{#if td.def.fixed_array~}}
-type {{td.def.name}} = {{#if (neqstr td.def.type_name) }}[{{td.def.type_name}}; {{td.def.array_size}}]{{/if}};
-{{else~}}
 type {{td.def.name}} = {{#if (neqstr td.def.type_name) }}Vec<{{td.def.type_name}}>{{else}} {{td.def.type_name}} {{/if}};
-{{/if~}}
 {{/if}}
 {{/each}}
 // End typedef section
@@ -34,29 +26,20 @@ static STRUCTS_T: &str = r#"
 // Start struct section
 {{#each ns.structs as |st|}}
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, XDROut, XDRIn)]
 pub struct {{st.name}} {
 {{#each st.props as |prop|}}
 {{#if prop.array_size}}
 {{#if prop.fixed_array}}
-  {{prop.name}}: {{#if (neqstr prop.type_name) }}[{{prop.type_name}}; {{prop.array_size}}]{{/if}},
+  #[array(fixed = {{prop.array_size}})]
 {{else}}
-  {{prop.name}}: {{#if (neqstr prop.type_name) }}Vec<{{prop.type_name}}>{{else}} {{prop.type_name}} {{/if}},
+  #[array(var = {{prop.array_size}})]
 {{/if}}
+  pub {{prop.name}}: {{#if (neqstr prop.type_name) }}Vec<{{prop.type_name}}>{{else}} {{prop.type_name}} {{/if}},
 {{else}}
-  {{prop.name}}:  {{prop.type_name}},
+  pub {{prop.name}}:  {{prop.type_name}},
 {{/if}}
 {{/each~}}
-}
-
-impl XDR for {{st.name}} {
-    fn to_xdr(&self) -> Result<Vec<u8>, Error> {
-        to_bytes(&self)
-    }
-
-    fn from_xdr(xdr: &[u8]) -> Result<{{st.name}}, Error> {
-        from_bytes(xdr)
-    }
 }
 {{/each}}
 // End struct section
@@ -64,8 +47,8 @@ impl XDR for {{st.name}} {
 
 static ENUM_T: &str = r#"
 {{#each ns.enums as |enum|}}
-#[derive(Debug, Serialize, Deserialize)]
-enum {{enum.name}} {
+#[derive(Debug, XDROut, XDRIn)]
+pub enum {{enum.name}} {
 {{#each enum.values as |val|~}}
     {{val.name}},
 {{/each~}}
@@ -76,17 +59,6 @@ impl Default for {{enum.name}} {
         {{enum.name}}::{{enum.values.0.name}}
     }
 }
-
-impl XDR for {{enum.name}} {
-    fn to_xdr(&self) -> Result<Vec<u8>, Error> {
-        to_bytes(&self)
-    }
-
-    fn from_xdr(xdr: &[u8]) -> Result<{{enum.name}}, Error> {
-        from_bytes(xdr)
-    }
-}
-
 {{/each~}}
 "#;
 
@@ -94,8 +66,8 @@ static UNION_T: &str = r#"
 // Start union section
 
 {{#each ns.unions as |uni|}}
-#[derive(Debug, Serialize, Deserialize)]
-enum {{uni.name}} {
+#[derive(Debug, XDROut, XDRIn)]
+pub enum {{uni.name}} {
 {{#each uni.switch.cases as |case|}}
 {{#if (not (isvoid case.ret_type.name))}}
   {{case.value}}({{case.ret_type.type_name}}),
@@ -112,16 +84,6 @@ impl Default for {{uni.name}} {
     {{else}}
       {{uni.name}}::{{uni.switch.cases.0.value}}(())
     {{/if}}
-    }
-}
-
-impl XDR for {{uni.name}} {
-    fn to_xdr(&self) -> Result<Vec<u8>, Error> {
-        to_bytes(&self)
-    }
-
-    fn from_xdr(xdr: &[u8]) -> Result<{{uni.name}}, Error> {
-        from_bytes(xdr)
     }
 }
 {{/each~}}

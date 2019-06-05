@@ -50,7 +50,7 @@ static ENUM_T: &str = r#"
 #[derive(Debug, XDROut, XDRIn)]
 pub enum {{enum.name}} {
 {{#each enum.values as |val|~}}
-    {{val.name}},
+    {{val.name}} = {{val.index}},
 {{/each~}}
 }
 

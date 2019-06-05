@@ -15,9 +15,19 @@ static TYPEDEFS_T: &str = r#"
 // Start typedef section
 
 {{#each ns.typedefs as |td| ~}}
-{{#if td.def.array_size~}}
-type {{td.def.name}} = {{#if (neqstr td.def.type_name) }}Vec<{{td.def.type_name}}>{{else}} {{td.def.type_name}} {{/if}};
+#[derive(Default, Debug, XDROut, XDRIn)]
+pub struct {{td.def.name}} {
+{{#if td.def.array_size}}
+{{#if td.def.fixed_array}}
+  #[array(fixed = {{td.def.array_size}})]
+{{else}}
+  #[array(var = {{td.def.array_size}})]
 {{/if}}
+  pub t: {{#if (neqstr td.def.type_name) }}Vec<{{td.def.type_name}}>{{else}} {{td.def.type_name}} {{/if}},
+{{else}}
+  pub t:  {{td.def.type_name}},
+{{/if}}
+}
 {{/each}}
 // End typedef section
 "#;

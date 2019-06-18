@@ -38,7 +38,7 @@ static ENUM_T: &str = r#"
 export function {{enum.name}}() {
     return new types.Enum(
         {{#each enum.values as |val| ~}}
-          {{val.index}}: {{val.name}},
+          {{val.index}}: "{{val.name}}",
         {{/each}}
     )
 }

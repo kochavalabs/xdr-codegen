@@ -36,11 +36,11 @@ static ENUM_T: &str = r#"
 // Start enum section
 {{#each ns.enums as |enum|}}
 export function {{enum.name}}() {
-    return new types.Enum(
+    return new types.Enum({
         {{#each enum.values as |val| ~}}
           {{val.index}}: "{{val.name}}",
         {{/each}}
-    )
+    })
 }
 {{/each}}
 

@@ -114,7 +114,7 @@ fn is_built_in_single(def_type: &str) -> bool {
 impl CodeGenerator for JsGenerator {
     fn code(&self, namespaces: Vec<Namespace>) -> Result<String, &'static str> {
         let mut type_map = HashMap::new();
-        type_map.insert("boolean", "Bool");
+        type_map.insert("bool", "Bool");
         type_map.insert("int", "Int");
         type_map.insert("unsigned int", "UInt");
         type_map.insert("unsigned hyper", "UHyper");

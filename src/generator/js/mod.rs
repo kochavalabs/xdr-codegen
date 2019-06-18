@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 static HEADER: &str = r#"
 
-import * as XDR from 'js-xdr';
+import types from 'js-xdr';
 
 
 var types = XDR.config(xdr => {
@@ -14,10 +14,10 @@ var types = XDR.config(xdr => {
 
 static TYPEDEFS_T: &str = r#"
 // Start typedef section
-{{#each ns.typedefs as |td| ~}}
-
-xdr.typedef("{{td.def.name}}", {{#typeconv td.def.name td.def.type_name td.def.array_size td.def.fixed_array}}{{/typeconv}});
-
+{{#each ns.typedefs as |td|}}
+export function {{td.def.name}}() {
+    return {{#typeconv td.def.name td.def.type_name td.def.array_size td.def.fixed_array}}{{/typeconv}};
+}
 {{/each~}}
 // End typedef section
 "#;
@@ -25,24 +25,26 @@ xdr.typedef("{{td.def.name}}", {{#typeconv td.def.name td.def.type_name td.def.a
 static STRUCTS_T: &str = r#"
 // Start struct section
 {{#each ns.structs as |st| ~}}
-xdr.struct("{{st.name}}", [
-{{#each st.props as |prop|}}
-  ["{{prop.name}}", {{#typeconv prop.name prop.type_name prop.array_size prop.fixed_array}}{{/typeconv}}],
+export function {{st.name}}() {
+    return new types.Struct(
+        [{{#each st.props as |prop| ~}}"{{prop.name}}",{{/each ~}}],
+        [{{#each st.props as |prop| ~}}{{#typeconv prop.name prop.type_name prop.array_size prop.fixed_array}}{{/typeconv}},{{/each ~}}]
+    )
+}
 {{/each}}
-]);
-{{/each}}
-
 // End struct section
 "#;
 
 static ENUM_T: &str = r#"
 // Start enum section
 {{#each ns.enums as |enum|}}
-xdr.enum("{{enum.name}}", {
-{{#each enum.values as |val|}}
-  {{val.name}}: {{val.index}},
-{{/each~}}
-});
+export function {{enum.name}}() {
+    return new types.Enum(
+        {{#each enum.values as |val| ~}}
+          {{val.index}}: {{val.name}},
+        {{/each}}
+    )
+}
 {{/each}}
 
 // End enum section
@@ -52,36 +54,27 @@ static UNION_T: &str = r#"
 // Start union section
 
 {{#each ns.unions as |uni|}}
-xdr.union("{{uni.name}}", {
-  switchOn: xdr.lookup("{{uni.switch.enum_type}}"),
-  switchName: "{{uni.switch.enum_name}}",
-  switches: [
-    {{#each uni.switch.cases as |case|~}}
-    {{#if (not (isvoid case.ret_type.name))}}
-        ["{{case.value}}", "{{case.value}}"],
-    {{else}}
-        ["{{case.value}}", xdr.void()], 
-    {{/if}}
-    {{/each~}}
-  ],
-  arms: {
-    {{#each uni.switch.cases as |case| ~}}
-    {{#if (not (isvoid case.ret_type.name)) ~}}
-        {{case.value}}: {{#typeconv case.ret_type.name case.ret_type.type_name case.ret_type.array_size case.ret_type.fixed_array}}{{/typeconv}},
-    {{/if}}
-    {{/each~}}
-  },
-});
+export function {{uni.name}}() {
+    return new types.Union(
+        {{uni.switch.enum_type}}(),
+        {
+            {{#each uni.switch.cases as |case|~}}
+                {{#if (not (isvoid case.ret_type.name))}}
+                    "{{case.value}}":  {{#typeconv case.ret_type.name case.ret_type.type_name case.ret_type.array_size case.ret_type.fixed_array}}{{/typeconv}},
+                {{else}}
+                    "{{case.value}}": new types.Void(),
+                {{/if}}
+            {{/each}}
+        }
+    )
+}
 {{/each}}
-
 // End union section
 "#;
 
 static FOOTER: &str = r#"
 // End namespace {{ns.name}}
 {{/each~}}
-});
-export default types;
 "#;
 
 #[derive(Debug, Default)]
@@ -96,7 +89,7 @@ fn build_file_template() -> String {
 
 fn is_array_type(def_type: &str) -> bool {
     match def_type {
-        "string" => true,
+        "Str" => true,
         "opaque" => true,
         _ => false,
     }
@@ -104,14 +97,14 @@ fn is_array_type(def_type: &str) -> bool {
 
 fn is_built_in(def_type: &str) -> bool {
     match def_type {
-        "void" => true,
-        "bool" => true,
-        "int" => true,
-        "hyper" => true,
-        "uint" => true,
-        "uhyper" => true,
-        "float" => true,
-        "double" => true,
+        "Void" => true,
+        "Bool" => true,
+        "Int" => true,
+        "Hyper" => true,
+        "UInt" => true,
+        "UHyper" => true,
+        "Float" => true,
+        "Double" => true,
         "quadruple" => true,
         _ => false,
     }
@@ -124,21 +117,29 @@ fn is_built_in_single(def_type: &str) -> bool {
 impl CodeGenerator for JsGenerator {
     fn code(&self, namespaces: Vec<Namespace>) -> Result<String, &'static str> {
         let mut type_map = HashMap::new();
-        type_map.insert("boolean", "bool");
-        type_map.insert("unsigned int", "uint");
-        type_map.insert("unsigned hyper", "uhyper");
+        type_map.insert("boolean", "Bool");
+        type_map.insert("int", "Int");
+        type_map.insert("unsigned int", "UInt");
+        type_map.insert("unsigned hyper", "UHyper");
+        type_map.insert("hyper", "Hyper");
+        type_map.insert("string", "Str");
+        type_map.insert("float", "Float");
+        type_map.insert("double", "Double");
+        type_map.insert("void", "Void");
         let processed = apply_type_map(namespaces, type_map)?;
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
         handlebars_helper!(typeconv: |name: str, typ: str, size: i64, fixed: bool| match (name, typ, size, fixed) {
-            (_, "opaque", _, false) => format!("xdr.varOpaque()"),
-            (_, typ, size, false) if is_built_in_single(typ) && size > 0 => format!("xdr.varArray(xdr.{}(), {})", typ, size),
-            (_, typ, size, false) if !is_array_type(typ) && size > 0 => format!("xdr.varArray(xdr.lookup(\"{}\"), {})", typ, size),
-            (_, typ, size, _) if is_built_in_single(typ) && size == 0 => format!("xdr.{}()", typ),
-            (_, typ, size, _) if is_built_in_single(typ) && size > 0 => format!("xdr.array(xdr.{}(), {})", typ, size),
-            (_, typ, size, _) if !is_array_type(typ) && size == 0 => format!("xdr.lookup(\"{}\")", typ),
-            (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("xdr.array(xdr.lookup(\"{}\"), {})", typ, size),
-            _ => format!("xdr.{}({})", typ, size)
+            (_, "opaque", _, false) => format!("new types.VarOpaque({})", size),
+            (_, "opaque", _, true) => format!("new types.FixedOpaque({})", size),
+            (_, typ, size, false) if is_built_in_single(typ) && size > 0 => format!("new types.VarArray({}, () => new {}())", size, typ),
+            (_, typ, size, false) if !is_array_type(typ) && size > 0 => format!("new types.VarArray({}, {})", size, typ),
+            (_, typ, size, _) if is_built_in_single(typ) && size == 0 => format!("new types.{}()", typ),
+            (_, typ, size, _) if is_built_in_single(typ) && size > 0 => format!("new types.FixedArray({}, () => new {}())", size, typ),
+            (_, typ, size, _) if !is_array_type(typ) && size == 0 => format!("{}()", typ),
+            (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new types.FixedArray({}, {})", size, typ),
+            (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new types.FixedArray({}, {})", size, typ),
+            _ => format!("new types.{}({})", typ, size)
         });
         handlebars_helper!(isvoid: |x: str| x == "");
         reg.register_helper("isvoid", Box::new(isvoid));
@@ -151,6 +152,6 @@ impl CodeGenerator for JsGenerator {
     }
 
     fn language(&self) -> String {
-        "go".to_string()
+        "js".to_string()
     }
 }

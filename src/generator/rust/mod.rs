@@ -2,6 +2,8 @@ use super::*;
 use handlebars::Handlebars;
 
 static HEADER: &str = r#"
+#![allow(non_snake_case)]
+#![allow(non_camel_case_types)]
 #[macro_use]
 extern crate ex_dee_derive;
 use ex_dee::de::{read_fixed_array, read_var_array, read_var_string, XDRIn};

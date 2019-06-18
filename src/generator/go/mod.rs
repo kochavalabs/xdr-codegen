@@ -257,8 +257,9 @@ var (
 
 static FOOTER: &str = r#"
 // Namspace end {{ns.name}}
+{{/each~}}
 var fmtTest = fmt.Sprint("this is a dummy usage of fmt")
-{{/each~}}"#;
+"#;
 
 #[derive(Debug, Default)]
 pub struct GoGenerator {}

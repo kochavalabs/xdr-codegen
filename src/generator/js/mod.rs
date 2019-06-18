@@ -3,11 +3,8 @@ use handlebars::Handlebars;
 use std::collections::HashMap;
 
 static HEADER: &str = r#"
+import types from 'js-xdr'
 
-import types from 'js-xdr';
-
-
-var types = XDR.config(xdr => {
 {{#each this as |ns| ~}}
 // Namspace start {{ns.name}}
 "#;
@@ -16,7 +13,7 @@ static TYPEDEFS_T: &str = r#"
 // Start typedef section
 {{#each ns.typedefs as |td|}}
 export function {{td.def.name}}() {
-    return {{#typeconv td.def.name td.def.type_name td.def.array_size td.def.fixed_array}}{{/typeconv}};
+    return {{#typeconv td.def.name td.def.type_name td.def.array_size td.def.fixed_array}}{{/typeconv}}
 }
 {{/each~}}
 // End typedef section

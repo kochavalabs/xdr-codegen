@@ -6,7 +6,7 @@ static HEADER: &str = r#"
 import types from 'js-xdr'
 
 {{#each this as |ns| ~}}
-// Namspace start {{ns.name}}
+// Namespace start {{ns.name}}
 "#;
 
 static TYPEDEFS_T: &str = r#"

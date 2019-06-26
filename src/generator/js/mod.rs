@@ -129,10 +129,10 @@ impl CodeGenerator for JsGenerator {
         handlebars_helper!(typeconv: |name: str, typ: str, size: i64, fixed: bool| match (name, typ, size, fixed) {
             (_, "opaque", _, false) => format!("new types.VarOpaque({})", size),
             (_, "opaque", _, true) => format!("new types.FixedOpaque({})", size),
-            (_, typ, size, false) if is_built_in_single(typ) && size > 0 => format!("new types.VarArray({}, () => new {}())", size, typ),
+            (_, typ, size, false) if is_built_in_single(typ) && size > 0 => format!("new types.VarArray({}, () => new types.{}())", size, typ),
             (_, typ, size, false) if !is_array_type(typ) && size > 0 => format!("new types.VarArray({}, {})", size, typ),
             (_, typ, size, _) if is_built_in_single(typ) && size == 0 => format!("new types.{}()", typ),
-            (_, typ, size, _) if is_built_in_single(typ) && size > 0 => format!("new types.FixedArray({}, () => new {}())", size, typ),
+            (_, typ, size, _) if is_built_in_single(typ) && size > 0 => format!("new types.FixedArray({}, () => new types.{}())", size, typ),
             (_, typ, size, _) if !is_array_type(typ) && size == 0 => format!("{}()", typ),
             (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new types.FixedArray({}, {})", size, typ),
             (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new types.FixedArray({}, {})", size, typ),

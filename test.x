@@ -69,6 +69,9 @@ namespace mazzaroth
 
     // The action data for this transaction
     Action action<3>;
+
+    // The action data for this transaction
+    int bug_test<>;
   };
 
 

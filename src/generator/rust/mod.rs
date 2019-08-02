@@ -6,8 +6,10 @@ static HEADER: &str = r#"
 #![allow(non_camel_case_types)]
 #[macro_use]
 extern crate ex_dee_derive;
+#[allow(unused_imports)]
 use ex_dee::de::{read_fixed_array, read_var_array, read_var_string, XDRIn};
 use ex_dee::error::Error;
+#[allow(unused_imports)]
 use ex_dee::ser::{write_fixed_array, write_var_array, write_var_string, XDROut};
 
 {{#each this as |ns| ~}}

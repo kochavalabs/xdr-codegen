@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 use std::fs::File;
+use std::io::prelude::*;
 use std::io::{self, Read};
 
 mod ast;
@@ -60,11 +61,18 @@ fn main() -> io::Result<()> {
         _ => &generator::go::GoGenerator {},
     };
 
-    println!(
-        "{}",
-        generator
-            .code(ast::build_namespaces(buffer).unwrap())
-            .unwrap()
-    );
+    let code = generator
+        .code(ast::build_namespaces(buffer).unwrap())
+        .unwrap();
+    match opt.output {
+        None => {
+            println!("{}", code);
+        }
+        Some(path) => {
+            let mut file = File::create(path.to_str().unwrap())?;
+            file.write_all(code.as_bytes())?;
+        }
+    }
+
     Ok(())
 }

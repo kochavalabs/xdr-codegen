@@ -20,7 +20,7 @@ static TYPEDEFS_T: &str = r#"
 // Start typedef section
 
 {{#each ns.typedefs as |td| ~}}
-#[derive(Clone, Default, Debug, XDROut, XDRIn)]
+#[derive(Copy, Clone, Default, Debug, XDROut, XDRIn)]
 pub struct {{td.def.name}} {
 {{#if td.def.array_size}}
 {{#if td.def.fixed_array}}
@@ -41,7 +41,7 @@ static STRUCTS_T: &str = r#"
 // Start struct section
 {{#each ns.structs as |st|}}
 
-#[derive(Clone, Default, Debug, XDROut, XDRIn)]
+#[derive(Copy, Clone, Default, Debug, XDROut, XDRIn)]
 pub struct {{st.name}} {
 {{#each st.props as |prop|}}
 {{#if prop.array_size}}
@@ -62,7 +62,7 @@ pub struct {{st.name}} {
 
 static ENUM_T: &str = r#"
 {{#each ns.enums as |enum|}}
-#[derive(Clone, Debug, XDROut, XDRIn)]
+#[derive(Copy, Clone, Debug, XDROut, XDRIn)]
 pub enum {{enum.name}} {
 {{#each enum.values as |val|~}}
     {{val.name}} = {{val.index}},
@@ -81,7 +81,7 @@ static UNION_T: &str = r#"
 // Start union section
 
 {{#each ns.unions as |uni|}}
-#[derive(Clone, Debug, XDROut, XDRIn)]
+#[derive(Copy, Clone, Debug, XDROut, XDRIn)]
 pub enum {{uni.name}} {
 {{#each uni.switch.cases as |case|}}
 {{#if (not (isvoid case.ret_type.name))}}

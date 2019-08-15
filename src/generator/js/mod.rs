@@ -136,7 +136,7 @@ impl CodeGenerator for JsGenerator {
             (_, typ, size, _) if !is_array_type(typ) && size == 0 => format!("{}()", typ),
             (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new types.FixedArray({}, {})", size, typ),
             (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new types.FixedArray({}, {})", size, typ),
-            _ => format!("new types.{}({})", typ, size)
+            _ => format!("new types.{}('', {})", typ, size)
         });
         handlebars_helper!(isvoid: |x: str| x == "");
         reg.register_helper("isvoid", Box::new(isvoid));

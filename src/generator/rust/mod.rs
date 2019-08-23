@@ -7,10 +7,14 @@ static HEADER: &str = r#"
 #[macro_use]
 extern crate ex_dee_derive;
 #[allow(unused_imports)]
-use ex_dee::de::{read_fixed_array, read_var_array, read_var_string, XDRIn};
+use ex_dee::de::{
+    read_fixed_array, read_fixed_opaque, read_var_array, read_var_opaque, read_var_string, XDRIn,
+};
 use ex_dee::error::Error;
 #[allow(unused_imports)]
-use ex_dee::ser::{write_fixed_array, write_var_array, write_var_string, XDROut};
+use ex_dee::ser::{
+    write_fixed_array, write_fixed_opaque, write_var_array, write_var_string, XDROut,
+};
 
 {{#each this as |ns| ~}}
 // Namspace start {{ns.name}}
@@ -20,7 +24,7 @@ static TYPEDEFS_T: &str = r#"
 // Start typedef section
 
 {{#each ns.typedefs as |td| ~}}
-#[derive(Clone, Default, Debug, XDROut, XDRIn)]
+#[derive(PartialEq, Clone, Default, Debug, XDROut, XDRIn)]
 pub struct {{td.def.name}} {
 {{#if td.def.array_size}}
 {{#if td.def.fixed_array}}
@@ -41,7 +45,7 @@ static STRUCTS_T: &str = r#"
 // Start struct section
 {{#each ns.structs as |st|}}
 
-#[derive(Clone, Default, Debug, XDROut, XDRIn)]
+#[derive(PartialEq, Clone, Default, Debug, XDROut, XDRIn)]
 pub struct {{st.name}} {
 {{#each st.props as |prop|}}
 {{#if prop.array_size}}
@@ -62,7 +66,7 @@ pub struct {{st.name}} {
 
 static ENUM_T: &str = r#"
 {{#each ns.enums as |enum|}}
-#[derive(Clone, Debug, XDROut, XDRIn)]
+#[derive(PartialEq, Clone, Debug, XDROut, XDRIn)]
 pub enum {{enum.name}} {
 {{#each enum.values as |val|~}}
     {{val.name}} = {{val.index}},
@@ -81,7 +85,7 @@ static UNION_T: &str = r#"
 // Start union section
 
 {{#each ns.unions as |uni|}}
-#[derive(Clone, Debug, XDROut, XDRIn)]
+#[derive(PartialEq, Clone, Debug, XDROut, XDRIn)]
 pub enum {{uni.name}} {
 {{#each uni.switch.cases as |case|}}
 {{#if (not (isvoid case.ret_type.name))}}

@@ -13,7 +13,8 @@ use ex_dee::de::{
 use ex_dee::error::Error;
 #[allow(unused_imports)]
 use ex_dee::ser::{
-    write_fixed_array, write_fixed_opaque, write_var_array, write_var_string, XDROut,
+    write_fixed_array, write_fixed_opaque, write_var_array, write_var_opaque, write_var_string,
+    XDROut,
 };
 
 {{#each this as |ns| ~}}

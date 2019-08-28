@@ -94,4 +94,16 @@ namespace mazzaroth
      // Consensus signatures
     Signature signatures<>;
   };
+
+  [table_schema]
+  struct TestTable
+  {
+
+    [primary_key]
+    string id<256>;
+
+    unsigned hyper nonce;
+
+    string info<256>;
+  };
 }

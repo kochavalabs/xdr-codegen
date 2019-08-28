@@ -14,6 +14,8 @@ pub struct Def {
     pub fixed_array: bool,
 
     pub array_size: i32,
+
+    pub tag: String,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
@@ -21,6 +23,8 @@ pub struct Struct {
     pub name: String,
 
     pub props: Vec<Def>,
+
+    pub tag: String,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
@@ -116,8 +120,12 @@ fn build_def(d: Pair<Rule>) -> Result<Def, &'static str> {
     let mut fixed_array: bool = false;
     let mut array_size: i32 = 0;
     let mut id_count = 0;
+    let mut tag = "".to_string();
     for node in d.into_inner() {
         match node.as_rule() {
+            Rule::tag => {
+                tag = node.as_str().to_string();
+            },
             Rule::types | Rule::identifier => {
                 if id_count == 0 {
                     type_name = node.as_str().to_string();
@@ -141,6 +149,7 @@ fn build_def(d: Pair<Rule>) -> Result<Def, &'static str> {
         type_name: type_name,
         fixed_array: fixed_array,
         array_size: array_size,
+        tag: tag,
     })
 }
 
@@ -160,9 +169,13 @@ fn build_typedef(td: Pair<Rule>) -> Result<Typedef, &'static str> {
 
 fn build_struct(st: Pair<Rule>) -> Result<Struct, &'static str> {
     let mut name: String = "".to_string();
+    let mut tag: String = "".to_string();
     let mut props: Vec<Def> = Vec::new();
     for node in st.into_inner() {
         match node.as_rule() {
+            Rule::tag => {
+                tag = node.as_str().to_string();
+            },
             Rule::bracket_start => {
                 name = name_from_bracket_start(node)?;
             }
@@ -177,6 +190,7 @@ fn build_struct(st: Pair<Rule>) -> Result<Struct, &'static str> {
     Ok(Struct {
         name: name,
         props: props,
+        tag: tag,
     })
 }
 

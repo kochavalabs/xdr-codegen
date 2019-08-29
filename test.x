@@ -106,4 +106,16 @@ namespace mazzaroth
 
     string info<256>;
   };
+
+  [table_schema]
+  struct SecondTable
+  {
+
+    [primary_key]
+    string fun_id<256>;
+
+    unsigned hyper nonce;
+
+    string info<256>;
+  };
 }

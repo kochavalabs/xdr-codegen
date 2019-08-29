@@ -91,6 +91,15 @@ fn name_from_bracket_start(bs: Pair<Rule>) -> Result<String, &'static str> {
     Err("bracket_start did not parse")
 }
 
+fn ident_from_tag(tag: Pair<Rule>) -> Result<String, &'static str> {
+    for node in tag.into_inner() {
+        if node.as_rule() == Rule::identifier {
+            return Ok(node.as_str().to_string());
+        }
+    }
+    Err("Did not parse")
+}
+
 fn get_array_info(d: Pair<Rule>) -> Result<(bool, i32), &'static str> {
     let mut fixed_array: bool = false;
     let mut array_size: i32 = std::i32::MAX;
@@ -123,9 +132,7 @@ fn build_def(d: Pair<Rule>) -> Result<Def, &'static str> {
     let mut tag = "".to_string();
     for node in d.into_inner() {
         match node.as_rule() {
-            Rule::tag => {
-                tag = node.as_str().to_string();
-            },
+            Rule::tag => tag = ident_from_tag(node)?,
             Rule::types | Rule::identifier => {
                 if id_count == 0 {
                     type_name = node.as_str().to_string();
@@ -173,9 +180,7 @@ fn build_struct(st: Pair<Rule>) -> Result<Struct, &'static str> {
     let mut props: Vec<Def> = Vec::new();
     for node in st.into_inner() {
         match node.as_rule() {
-            Rule::tag => {
-                tag = node.as_str().to_string();
-            },
+            Rule::tag => tag = ident_from_tag(node)?,
             Rule::bracket_start => {
                 name = name_from_bracket_start(node)?;
             }

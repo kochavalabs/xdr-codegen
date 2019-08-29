@@ -105,6 +105,10 @@ namespace mazzaroth
     unsigned hyper nonce;
 
     string info<256>;
+
+    hyper list_fixed[3];
+
+    hyper list_var<3>;
   };
 
   [table_schema]

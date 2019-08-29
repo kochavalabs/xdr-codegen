@@ -1,5 +1,5 @@
 use super::ast::{Def, Namespace, Struct};
-use mazzaroth_xdr::{BasicColumn, BasicType, Column, Schema, Table};
+use mazzaroth_xdr::{ArrayColumn, BasicColumn, BasicType, Column, Schema, Table};
 use std::collections::HashMap;
 
 fn string_to_basic_type(typ: String) -> Result<BasicType, &'static str> {
@@ -31,7 +31,14 @@ fn def_to_column(
     }
 
     if def.array_size != 0 && def.type_name != "string" {
-        return Err("Arrays not implemented.");
+        let mut array_def = def.clone();
+        array_def.array_size = 0;
+        return Ok(Column::ARRAY(ArrayColumn {
+            name: def.name.clone(),
+            fixed: def.fixed_array,
+            length: def.array_size as u32,
+            column: vec![def_to_column(array_def, structs, typedefs)?],
+        }));
     }
 
     Ok(Column::BASIC(BasicColumn {
@@ -54,7 +61,6 @@ fn build_schema(
         }
         schema.tables.push(tab);
     }
-    println!("{:?}", schema);
     Ok(schema)
 }
 

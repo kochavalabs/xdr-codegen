@@ -1,3 +1,4 @@
+extern crate ex_dee;
 extern crate mazzaroth_xdr;
 extern crate pest;
 extern crate structopt;
@@ -9,11 +10,11 @@ extern crate handlebars;
 #[macro_use]
 extern crate pest_derive;
 
+use ex_dee::ser::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
 use std::fs::File;
-use std::io::prelude::*;
 use std::io::{self, Read};
 
 mod ast;
@@ -56,7 +57,18 @@ fn main() -> io::Result<()> {
 
     let namespaces = ast::build_namespaces(buffer).unwrap();
     if opt.language == Some("schema".to_string()) {
-        println!("{:?}", schema::generate_schema(namespaces).unwrap());
+        let schem = schema::generate_schema(namespaces).unwrap();
+        match opt.output {
+            None => {
+                println!("{:?}", schem);
+            }
+            Some(path) => {
+                let mut schema_bytes = Vec::new();
+                schem.write_xdr(&mut schema_bytes).unwrap();
+                let mut file = File::create(path.to_str().unwrap())?;
+                file.write_all(&schema_bytes)?;
+            }
+        }
         return Ok(());
     }
 

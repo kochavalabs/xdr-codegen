@@ -172,7 +172,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "mazzaroth-xdr"
 version = "0.1.0"
-source = "git+ssh://git@github.com/kochavalabs/mazzaroth-xdr.git?branch=kv-query#6716489c9c7cb771e4b8bf2a3bf459ec995e9ef7"
+source = "git+ssh://git@github.com/kochavalabs/mazzaroth-xdr.git?branch=kv-query#b15b35709bad8e055d519286953364a5084c49e1"
 dependencies = [
  "ex-dee 0.1.0 (git+ssh://git@github.com/kochavalabs/ex-dee.git)",
  "ex-dee-derive 0.1.0 (git+ssh://git@github.com/kochavalabs/ex-dee.git)",

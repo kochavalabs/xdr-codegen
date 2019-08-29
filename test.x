@@ -121,5 +121,9 @@ namespace mazzaroth
     unsigned hyper nonce;
 
     string info<256>;
+
+    ID test_id;
+
+    ID test_id_array[10];
   };
 }

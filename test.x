@@ -109,6 +109,8 @@ namespace mazzaroth
     hyper list_fixed[3];
 
     hyper list_var<3>;
+
+    Call test_struct;
   };
 
   [table_schema]

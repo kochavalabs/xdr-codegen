@@ -1,5 +1,7 @@
 use super::ast::{Def, Namespace, Struct};
-use mazzaroth_xdr::{ArrayColumn, BasicColumn, BasicType, Column, Schema, Table, TypedefColumn};
+use mazzaroth_xdr::{
+    ArrayColumn, BasicColumn, BasicType, Column, Schema, StructColumn, Table, TypedefColumn,
+};
 use std::collections::HashMap;
 
 fn string_to_basic_type(typ: String) -> Result<BasicType, &'static str> {
@@ -22,28 +24,40 @@ fn def_to_column(
     structs: &HashMap<String, Struct>,
     typedefs: &HashMap<String, Def>,
 ) -> Result<Column, &'static str> {
-    if typedefs.contains_key(&def.type_name) {
-        let td = typedefs.get(&def.type_name).unwrap();
-        let mut result = TypedefColumn::default();
-        result.name = def.name.clone();
-        if def.array_size != 0 {
-            let mut array_def = def.clone();
-            array_def.array_size = 0;
-            result.child = vec![Column::ARRAY(ArrayColumn {
-                name: def.name.clone(),
-                fixed: def.fixed_array,
-                length: def.array_size as u32,
-                column: vec![def_to_column(array_def, structs, typedefs)?],
-            })];
-        } else {
-            result.child = vec![def_to_column(td.clone(), structs, typedefs)?];
+    match typedefs.get(&def.type_name) {
+        Some(td) => {
+            let mut result = TypedefColumn::default();
+            result.name = def.name.clone();
+            if def.array_size != 0 {
+                let mut array_def = def.clone();
+                array_def.array_size = 0;
+                result.child = vec![Column::ARRAY(ArrayColumn {
+                    name: def.name.clone(),
+                    fixed: def.fixed_array,
+                    length: def.array_size as u32,
+                    column: vec![def_to_column(array_def, structs, typedefs)?],
+                })];
+            } else {
+                result.child = vec![def_to_column(td.clone(), structs, typedefs)?];
+            }
+            return Ok(Column::TYPEDEF(result));
         }
-        return Ok(Column::TYPEDEF(result));
+        None => {}
     }
 
-    if structs.contains_key(&def.type_name) {
-        return Err("Struct not implemented.");
-    }
+    match structs.get(&def.type_name) {
+        Some(val) => {
+            let mut prop_cols = vec![];
+            for prop in &val.props {
+                prop_cols.push(def_to_column(prop.clone(), structs, typedefs)?);
+            }
+            return Ok(Column::STRUCT(StructColumn {
+                name: def.name.clone(),
+                columns: prop_cols,
+            }));
+        }
+        None => {}
+    };
 
     if def.array_size != 0 && def.type_name != "string" && def.type_name != "opaque" {
         let mut array_def = def.clone();

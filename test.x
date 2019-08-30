@@ -54,6 +54,8 @@ namespace mazzaroth
 
     ActionCategory category;
 
+    boolean test_bool;
+
   };
 
   // A transaction that calls a function on a user defined contract.

@@ -59,7 +59,7 @@ export function {{uni.name}}() {
                 {{#if (not (isvoid case.ret_type.name))}}
                     "{{case.value}}": () => { return  {{#typeconv case.ret_type.name case.ret_type.type_name case.ret_type.array_size case.ret_type.fixed_array}}{{/typeconv}} },
                 {{else}}
-                    "{{case.value}}": new types.Void(),
+                    "{{case.value}}": () => { return new types.Void() },
                 {{/if}}
             {{/each}}
         }

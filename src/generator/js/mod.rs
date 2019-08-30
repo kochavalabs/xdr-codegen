@@ -57,7 +57,7 @@ export function {{uni.name}}() {
         {
             {{#each uni.switch.cases as |case|~}}
                 {{#if (not (isvoid case.ret_type.name))}}
-                    "{{case.value}}":  {{#typeconv case.ret_type.name case.ret_type.type_name case.ret_type.array_size case.ret_type.fixed_array}}{{/typeconv}},
+                    "{{case.value}}": () => { return  {{#typeconv case.ret_type.name case.ret_type.type_name case.ret_type.array_size case.ret_type.fixed_array}}{{/typeconv}} },
                 {{else}}
                     "{{case.value}}": new types.Void(),
                 {{/if}}

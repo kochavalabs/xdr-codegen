@@ -1,4 +1,4 @@
-# XDRGen
+# XDR-Codegen
 
 A tool for generating xdr friendly objects in various languages.
 

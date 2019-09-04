@@ -22,7 +22,7 @@ mod generator;
 mod schema;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "xdrgen", about = "CLI tool for generating xdr code.")]
+#[structopt(name = "xdr-codegen", about = "CLI tool for generating xdr code.")]
 struct Opt {
     /// Input files, stdin if not present
     #[structopt(parse(from_os_str))]

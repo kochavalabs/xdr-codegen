@@ -463,7 +463,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "xdrgen"
+name = "xdr-codegen"
 version = "0.1.0"
 dependencies = [
  "ex-dee 0.1.0 (git+ssh://git@github.com/kochavalabs/ex-dee.git)",

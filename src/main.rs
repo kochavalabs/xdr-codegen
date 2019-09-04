@@ -1,3 +1,5 @@
+extern crate ex_dee;
+extern crate mazzaroth_xdr;
 extern crate pest;
 extern crate structopt;
 
@@ -8,15 +10,16 @@ extern crate handlebars;
 #[macro_use]
 extern crate pest_derive;
 
+use ex_dee::ser::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
 use std::fs::File;
-use std::io::prelude::*;
 use std::io::{self, Read};
 
 mod ast;
 mod generator;
+mod schema;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "xdrgen", about = "CLI tool for generating xdr code.")]
@@ -51,6 +54,24 @@ fn main() -> io::Result<()> {
             }
         }
     }
+
+    let namespaces = ast::build_namespaces(buffer).unwrap();
+    if opt.language == Some("schema".to_string()) {
+        let schem = schema::generate_schema(namespaces).unwrap();
+        match opt.output {
+            None => {
+                println!("{:?}", schem);
+            }
+            Some(path) => {
+                let mut schema_bytes = Vec::new();
+                schem.write_xdr(&mut schema_bytes).unwrap();
+                let mut file = File::create(path.to_str().unwrap())?;
+                file.write_all(&schema_bytes)?;
+            }
+        }
+        return Ok(());
+    }
+
     let generator: &generator::CodeGenerator = match opt.language {
         Some(language) => match language.as_ref() {
             "go" => &generator::go::GoGenerator {},
@@ -61,9 +82,7 @@ fn main() -> io::Result<()> {
         _ => &generator::go::GoGenerator {},
     };
 
-    let code = generator
-        .code(ast::build_namespaces(buffer).unwrap())
-        .unwrap();
+    let code = generator.code(namespaces).unwrap();
     match opt.output {
         None => {
             println!("{}", code);

@@ -57,15 +57,16 @@ identifier = { !keywords ~ alpha ~ (alpha_num | "_")* }
 bracket_start = { ws_no_nl+ ~ identifier ~ whitespace* ~ "{" }
 end_bracket = {"}" ~ ";"?}
 single_param = { "(" ~ ws_no_nl* ~ identifier ~ ws_no_nl+ ~ identifier ~ ")" }
+tag = {  "[" ~ ws_no_nl* ~ identifier ~ ws_no_nl* ~ "]" }
 
-type_decl = { ( types | identifier ) ~ ws_no_nl+ ~ identifier ~ array_def? ~";" }
+type_decl = { tag? ~ empty_space* ~ ( types | identifier ) ~ ws_no_nl+ ~ identifier ~ array_def? ~";" }
 typedef = { TYPEDEF ~ whitespace+ ~ type_decl }
 enum_decl = { identifier ~ ws_no_nl+ ~ "=" ~ ws_no_nl ~ num_p ~ ws_no_nl* ~ ","? }
 case_statement = { CASE ~ ws_no_nl+ ~ identifier ~ ":" ~ NEWLINE ~ empty_space+ ~ (type_decl | VOID ~ ";") }
 
 switch = {SWITCH ~ ws_no_nl* ~ single_param ~ whitespace* ~ "{" ~ (empty_space | case_statement)* ~ end_bracket}
 union = { UNION ~ ws_no_nl+ ~ identifier ~ ws_no_nl+ ~ switch }
-Struct = {STRUCT ~ bracket_start ~ (empty_space | type_decl)* ~ end_bracket }
+Struct = {tag? ~ empty_space* ~ STRUCT ~ bracket_start ~ (empty_space | type_decl)* ~ end_bracket }
 Enum = {ENUM ~ bracket_start ~ (empty_space | enum_decl)* ~ end_bracket }
 namespace = { NAMESPACE ~ bracket_start ~ (empty_space | Struct | typedef | Enum | union)* ~ end_bracket}
 

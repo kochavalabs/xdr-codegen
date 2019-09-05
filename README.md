@@ -1,12 +1,28 @@
 # XDR-Codegen
 
-A tool for generating xdr friendly objects in various languages.
+Xdr-js-serialize is a library for facilitating (de)serialization between the
+[XDR](https://en.wikipedia.org/wiki/External_Data_Representation) format and
+Javascript Dictionaries.
 
-Implementation is in very early stages. Can parse simple .x files into
-an AST.
+This repository is best used in tandom with [xdr-codegen](https://github.com/kochavalabs/xdr-codegen)
+for anything beyond basic xdr manipulation.
 
-To run and see debug output for AST:
+## Usage
+
+We currently support code generation for 3 languages: javascript, rust and go.
+The generated code has the following dependencies:
+
+- go: [go-xdr](https://github.com/stellar/go-xdr)
+- rust: [xdr-rs-serialize](https://github.com/kochavalabs/xdr-rs-serialize)
+- javascript: [xdr-js-serialize](https://github.com/kochavalabs/xdr-js-serialize)
 
 ```bash
-cat test.x  | cargo run
+# Javascript generation
+cargo run test.x --language js # | eslint --stdin
+cargo run test.x --language rust # | rustfmt
+cargo run test.x --language go # | gofmt
 ```
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)

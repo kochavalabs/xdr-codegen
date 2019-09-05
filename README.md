@@ -19,7 +19,9 @@ The generated code has the following dependencies:
 ```bash
 # Javascript generation
 cargo run test.x --language js # | eslint --stdin
+# Rust generation
 cargo run test.x --language rust # | rustfmt
+# Go generation
 cargo run test.x --language go # | gofmt
 ```
 

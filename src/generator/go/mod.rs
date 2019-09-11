@@ -170,13 +170,13 @@ type {{uni.name}} struct{
 
 // SwitchFieldName returns the field name in which this union's
 // discriminant is stored
-func (u {{uni.name}}) SwitchFieldName() string {
+func (s {{uni.name}}) SwitchFieldName() string {
   return "{{uni.switch.enum_name}}"
 }
 
 // ArmForSwitch returns which field name should be used for storing
 // the value for an instance of {{uni.name}}
-func (u {{uni.name}}) ArmForSwitch(sw int32) (string, bool) {
+func (s {{uni.name}}) ArmForSwitch(sw int32) (string, bool) {
 switch {{uni.switch.enum_type}}(sw) {
 {{#each uni.switch.cases as |case|}}
   case {{uni.switch.enum_type}}{{case.value}}:
@@ -209,8 +209,8 @@ switch {{uni.enum_type}}(aType) {
 {{#if (not (isvoid case.ret_type.name))}}
 // Must{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // panicing if the value is not set.
-func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
-  val, ok := u.Get{{case.ret_type.name}}()
+func (s {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
+  val, ok := s.Get{{case.ret_type.name}}()
 
   if !ok {
     panic("arm {{case.ret_type.name}} is not set")
@@ -221,11 +221,11 @@ func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
 
 // Get{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // returning ok if the union's switch indicated the value is valid.
-func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
-  armName, _ := u.ArmForSwitch(int32(u.Type))
+func (s {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
+  armName, _ := s.ArmForSwitch(int32(s.Type))
 
   if armName == "{{case.ret_type.name}}" {
-    result = *u.{{case.ret_type.name}}
+    result = *s.{{case.ret_type.name}}
     ok = true
   }
 

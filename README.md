@@ -1,11 +1,14 @@
-# XDR-Codegen
+# XDR Codegen
 
-Xdr-js-serialize is a library for facilitating (de)serialization between the
-[XDR](https://en.wikipedia.org/wiki/External_Data_Representation) format and
-Javascript Dictionaries.
+Xdr-codegen is a binary that is used to take the [XDR Language Specification](https://tools.ietf.org/html/rfc4506#section-6)
+and generate source code in various languages. The goal of this is to facilitate
+the communication of XDR objects across binaries that are written in different
+languages. Another way to say this is we take .x files and convert them to the
+appropriate js, go or rust source (protoc for XDR).
 
-This repository is best used in tandom with [xdr-codegen](https://github.com/kochavalabs/xdr-codegen)
-for anything beyond basic xdr manipulation.
+**Warning:** This project was put together to aid us in our development in a
+short amount of time. There is still more work to be done before xdr-codegen
+is completely compatible with the [XDR Language Specification](https://tools.ietf.org/html/rfc4506#section-6).
 
 ## Usage
 

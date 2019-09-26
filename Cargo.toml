@@ -5,8 +5,8 @@ authors = ["Kyle Bartush <kbartush@kochava.com>"]
 edition = "2018"
 
 [dependencies]
-mazzaroth-xdr = { git = "ssh://git@github.com/kochavalabs/mazzaroth-xdr.git", branch = "develop" }
-xdr-rs-serialize = { git = "ssh://git@github.com/kochavalabs/xdr-rs-serialize.git", branch = "develop" }
+mazzaroth-xdr = { git = "https://git@github.com/kochavalabs/mazzaroth-xdr.git", branch = "develop" }
+xdr-rs-serialize = { git = "https://git@github.com/kochavalabs/xdr-rs-serialize.git", branch = "develop" }
 pest = "2.1.1"
 pest_derive = "2.1.0"
 structopt = "0.2.15"

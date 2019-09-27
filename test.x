@@ -2,7 +2,6 @@
 %#include "common.x"
 
 namespace mazzaroth
-{
 
   typedef opaque Signature[64];
   typedef opaque ID[32];

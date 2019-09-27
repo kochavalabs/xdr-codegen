@@ -6,8 +6,6 @@ jobs:
       - image: circleci/rust:latest
     steps:
       - checkout
-      - restore_cache:
-          key: project-cache
       - run:
           name: Check formatting
           command: |
@@ -16,15 +14,7 @@ jobs:
       - run:
           name: Stable Build
           command: |
-            rustup toolchain install stable
-            rustup run stable rustc --version --verbose
-            rustup run stable cargo --version --verbose
-            rustup run stable cargo build
-      - save_cache:
-          key: project-cache
-          paths:
-            - "~/.cargo"
-            - "./target"
+            cargo build
   test:
     docker:
       - image: circleci/rust:latest
@@ -33,13 +23,12 @@ jobs:
       - run:
           name: Test
           command: |
-            rustup toolchain install stable
-            rustup run stable cargo test
+            cargo test
       - run:
           name: Generate Files
           command: |
             cargo run test.x --language js
-            cargo run test.x --language rust
+            cargo run test.x --language rust | rustfmt
             cargo run test.x --language go
 workflows:
   version: 2

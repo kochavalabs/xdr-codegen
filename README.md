@@ -1,5 +1,7 @@
 # XDR Codegen
 
+[![CircleCI](https://circleci.com/gh/kochavalabs/xdr-codegen.svg?style=svg)](https://circleci.com/gh/kochavalabs/xdr-codegen)
+
 Xdr-codegen is a binary that is used to take the [XDR Language Specification](https://tools.ietf.org/html/rfc4506#section-6)
 and generate source code in various languages. The goal of this is to facilitate
 the communication of XDR objects across binaries that are written in different

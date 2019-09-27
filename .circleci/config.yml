@@ -1,0 +1,40 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/rust:latest
+    steps:
+      - checkout
+      - run:
+          name: Check formatting
+          command: |
+            rustfmt --version
+            cargo fmt -- --check
+      - run:
+          name: Stable Build
+          command: |
+            cargo build
+  test:
+    docker:
+      - image: circleci/rust:latest
+    steps:
+      - checkout
+      - run:
+          name: Test
+          command: |
+            cargo test
+      - run:
+          name: Generate Files
+          command: |
+            cargo run test.x --language js
+            cargo run test.x --language rust | rustfmt
+            cargo run test.x --language go
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build

@@ -5,14 +5,14 @@ static HEADER: &str = r#"
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 #[macro_use]
-extern crate ex_dee_derive;
+extern crate xdr_rs_serialize_derive;
 #[allow(unused_imports)]
-use ex_dee::de::{
+use xdr_rs_serialize::de::{
     read_fixed_array, read_fixed_opaque, read_var_array, read_var_opaque, read_var_string, XDRIn,
 };
-use ex_dee::error::Error;
+use xdr_rs_serialize::error::Error;
 #[allow(unused_imports)]
-use ex_dee::ser::{
+use xdr_rs_serialize::ser::{
     write_fixed_array, write_fixed_opaque, write_var_array, write_var_opaque, write_var_string,
     XDROut,
 };

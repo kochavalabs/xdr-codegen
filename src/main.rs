@@ -1,7 +1,7 @@
-extern crate ex_dee;
 extern crate mazzaroth_xdr;
 extern crate pest;
 extern crate structopt;
+extern crate xdr_rs_serialize;
 
 #[macro_use]
 extern crate serde_derive;
@@ -10,9 +10,9 @@ extern crate handlebars;
 #[macro_use]
 extern crate pest_derive;
 
-use ex_dee::ser::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use xdr_rs_serialize::ser::*;
 
 use std::fs::File;
 use std::io::{self, Read};
@@ -22,7 +22,7 @@ mod generator;
 mod schema;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "xdrgen", about = "CLI tool for generating xdr code.")]
+#[structopt(name = "xdr-codegen", about = "CLI tool for generating xdr code.")]
 struct Opt {
     /// Input files, stdin if not present
     #[structopt(parse(from_os_str))]

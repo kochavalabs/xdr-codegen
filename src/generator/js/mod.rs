@@ -3,7 +3,7 @@ use handlebars::Handlebars;
 use std::collections::HashMap;
 
 static HEADER: &str = r#"
-import types from 'js-xdr'
+import types from 'xdr-js-serialize'
 
 {{#each this as |ns| ~}}
 // Namespace start {{ns.name}}

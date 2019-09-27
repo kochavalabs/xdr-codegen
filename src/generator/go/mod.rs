@@ -3,6 +3,7 @@ use handlebars::Handlebars;
 use std::collections::HashMap;
 
 static HEADER: &str = r#"
+// Package xdr is automatically generated
 // DO NOT EDIT or your changes may be overwritten
 package xdr
 
@@ -32,15 +33,18 @@ func Marshal(w io.Writer, v interface{}) (int, error) {
 
 static TYPEDEFS_T: &str = r#"
 // Start typedef section
+
 {{#each ns.typedefs as |td| ~}}
 {{#if td.def.array_size}}
 {{#if td.def.fixed_array}}
+// {{td.def.name}} generated typedef
 type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[{{td.def.array_size}}]{{/if}}{{td.def.type_name}}
 // XDRMaxSize implements the Sized interface for {{td.def.name}}
 func (s {{td.def.name}}) XDRMaxSize() int {
   return {{td.def.array_size}}
 }
 {{else}}
+// {{td.def.name}} generated typedef
 type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{/if}}{{td.def.type_name}}
 {{/if}}
 {{/if}}
@@ -68,8 +72,10 @@ var (
 
 static STRUCTS_T: &str = r#"
 // Start struct section
+
 {{#each ns.structs as |st| ~}}
 
+// {{st.name}} generated struct
 type {{st.name}} struct {
 {{#each st.props as |prop|}}
 {{#if prop.array_size}}
@@ -111,12 +117,15 @@ static ENUM_T: &str = r#"
 // Start enum section
 
 {{#each ns.enums as |enum|}}
+// {{enum.name}} generated enum
 type {{enum.name}} int32
 const (
 {{#each enum.values as |val|}}
+  // {{enum.name}}{{val.name}} enum value {{val.index}}
   {{enum.name}}{{val.name}} {{enum.name}} = {{val.index}}
 {{/each~}}
 )
+// {{enum.name}}Map generated enum map
 var {{enum.name}}Map = map[int32]string{
 {{#each enum.values as |val|}}
   {{val.index}}: "{{enum.name}}{{val.name}}",
@@ -154,11 +163,13 @@ var (
 )
 {{/each~}}
 // End enum section
-// "#;
+"#;
 
 static UNION_T: &str = r#"
 // Start union section
+
 {{#each ns.unions as |uni|}}
+// {{uni.name}} generated union
 type {{uni.name}} struct{
   {{uni.switch.enum_name}} {{uni.switch.enum_type}}
 {{#each uni.switch.cases as |case|}}
@@ -235,15 +246,15 @@ func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_n
 {{/each~}}
 
 // MarshalBinary implements encoding.BinaryMarshaler.
-func (s {{uni.name}}) MarshalBinary() ([]byte, error) {
+func (u {{uni.name}}) MarshalBinary() ([]byte, error) {
   b := new(bytes.Buffer)
-  _, err := Marshal(b, s)
+  _, err := Marshal(b, u)
   return b.Bytes(), err
 }
 
 // UnmarshalBinary implements encoding.BinaryUnmarshaler.
-func (s *{{uni.name}}) UnmarshalBinary(inp []byte) error {
-  _, err := Unmarshal(bytes.NewReader(inp), s)
+func (u *{{uni.name}}) UnmarshalBinary(inp []byte) error {
+  _, err := Unmarshal(bytes.NewReader(inp), u)
   return err
 }
 

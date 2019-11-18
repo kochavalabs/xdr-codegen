@@ -13,9 +13,12 @@ use xdr_rs_serialize::de::{
 use xdr_rs_serialize::error::Error;
 #[allow(unused_imports)]
 use xdr_rs_serialize::ser::{
-    write_fixed_array, write_fixed_opaque, write_var_array, write_var_opaque, write_var_string,
-    XDROut,
+    write_fixed_array, write_fixed_array_json, write_fixed_opaque, write_fixed_opaque_json,
+    write_var_array, write_var_array_json, write_var_opaque, write_var_opaque_json,
+    write_var_string, write_var_string_json, XDROut,
 };
+#[allow(unused_imports)]
+use std::io::Write;
 
 {{#each this as |ns| ~}}
 // Namspace start {{ns.name}}

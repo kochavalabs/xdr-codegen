@@ -22,8 +22,6 @@ use xdr_rs_serialize::ser::{
 #[allow(unused_imports)]
 use std::io::Write;
 
-extern crate json;
-
 {{#each this as |ns| ~}}
 // Namspace start {{ns.name}}
 "#;

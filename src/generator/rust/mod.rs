@@ -8,7 +8,9 @@ static HEADER: &str = r#"
 extern crate xdr_rs_serialize_derive;
 #[allow(unused_imports)]
 use xdr_rs_serialize::de::{
-    read_fixed_array, read_fixed_opaque, read_var_array, read_var_opaque, read_var_string, XDRIn,
+    read_fixed_array, read_fixed_array_json, read_fixed_opaque, read_fixed_opaque_json,
+    read_var_array, read_var_array_json, read_var_opaque, read_var_opaque_json, read_var_string,
+    read_var_string_json, XDRIn,
 };
 use xdr_rs_serialize::error::Error;
 #[allow(unused_imports)]
@@ -19,6 +21,8 @@ use xdr_rs_serialize::ser::{
 };
 #[allow(unused_imports)]
 use std::io::Write;
+
+extern crate json;
 
 {{#each this as |ns| ~}}
 // Namspace start {{ns.name}}

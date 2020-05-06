@@ -72,7 +72,7 @@ fn main() -> io::Result<()> {
         return Ok(());
     }
 
-    let generator: &generator::CodeGenerator = match opt.language {
+    let generator: &dyn generator::CodeGenerator = match opt.language {
         Some(language) => match language.as_ref() {
             "go" => &generator::go::GoGenerator {},
             "js" => &generator::js::JsGenerator {},

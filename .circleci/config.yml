@@ -44,6 +44,7 @@ jobs:
             - ~/.cargo
             - ./target
             - Cargo.toml
+            - Cargo.lock
 
   test:
     executor: rust-latest

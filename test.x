@@ -97,11 +97,9 @@ namespace mazzaroth
     Signature signatures<>;
   };
 
-  [table_schema]
   struct TestTable
   {
 
-    [primary_key]
     string id<256>;
 
     unsigned hyper nonce;
@@ -115,7 +113,6 @@ namespace mazzaroth
     Call test_struct;
   };
 
-  [table_schema]
   struct SecondTable
   {
 

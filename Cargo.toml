@@ -1,6 +1,6 @@
 [package]
 name = "xdr-codegen"
-version = "0.1.0-alpha"
+version = "0.2.1"
 authors = ["Kochavalabs <dev@mazzaroth.io>"]
 description = "XDR code generation"
 license = "MIT"
@@ -12,8 +12,8 @@ keywords = ["xdr", "code", "generation"]
 exclude = ["test.x"]
 
 [dependencies]
-mazzaroth-xdr = "0.1.0-alpha"
-xdr-rs-serialize = "0.1.0-alpha"
+mazzaroth-xdr = { branch = "develop", version = "0.2.2" }
+xdr-rs-serialize = { branch = "develop", version = "0.2.0" }
 pest = "2.1.1"
 pest_derive = "2.1.0"
 structopt = "0.2.15"

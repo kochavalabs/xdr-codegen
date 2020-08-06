@@ -1,10 +1,10 @@
 use super::ast::*;
 use std::collections::HashMap;
 
+pub mod commonjs;
 pub mod go;
 pub mod js;
 pub mod rust;
-pub mod commonjs;
 
 pub trait CodeGenerator {
     fn code(&self, namespace: Vec<Namespace>) -> Result<String, &'static str>;

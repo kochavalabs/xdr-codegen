@@ -4,6 +4,7 @@ use std::collections::HashMap;
 pub mod go;
 pub mod js;
 pub mod rust;
+pub mod node;
 
 pub trait CodeGenerator {
     fn code(&self, namespace: Vec<Namespace>) -> Result<String, &'static str>;

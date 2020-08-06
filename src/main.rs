@@ -1,6 +1,7 @@
 extern crate mazzaroth_xdr;
 extern crate pest;
 extern crate structopt;
+extern crate swc;
 extern crate xdr_rs_serialize;
 
 #[macro_use]
@@ -61,7 +62,8 @@ fn main() -> io::Result<()> {
             "go" => &generator::go::GoGenerator {},
             "js" => &generator::js::JsGenerator {},
             "rust" => &generator::rust::RustGenerator {},
-            _ => &generator::go::GoGenerator {},
+            "commonjs" => &generator::node::NodeGenerator {},
+            _ => panic!("language options are go, js, rust and commonjs"),
         },
         _ => &generator::go::GoGenerator {},
     };

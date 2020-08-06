@@ -14,6 +14,8 @@ exclude = ["test.x"]
 [dependencies]
 mazzaroth-xdr = { git = "https://git@github.com/kochavalabs/mazzaroth-xdr.git", branch = "develop" }
 xdr-rs-serialize = { git = "https://git@github.com/kochavalabs/xdr-rs-serialize.git", branch = "develop" }
+swc = { git = "https://github.com/swc-project/swc", tag = "v1.2.11"}
+swc_common = { git = "https://github.com/swc-project/swc", tag = "v1.2.11", features = ["tty-emitter"]}
 pest = "2.1.1"
 pest_derive = "2.1.0"
 structopt = "0.2.15"

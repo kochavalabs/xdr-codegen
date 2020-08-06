@@ -152,26 +152,22 @@ fn build_def(d: Pair<Rule>) -> Result<Def, &'static str> {
     }
 
     Ok(Def {
-        name: name,
-        type_name: type_name,
-        fixed_array: fixed_array,
-        array_size: array_size,
-        tag: tag,
+        name,
+        type_name,
+        fixed_array,
+        array_size,
+        tag,
     })
 }
 
 fn build_typedef(td: Pair<Rule>) -> Result<Typedef, &'static str> {
     let mut def = Def::default();
     for node in td.into_inner() {
-        match node.as_rule() {
-            Rule::type_decl => {
-                let built_def = build_def(node)?;
-                def = built_def;
-            }
-            _ => {}
+        if node.as_rule() == Rule::type_decl {
+            def = build_def(node)?;
         }
     }
-    Ok(Typedef { def: def })
+    Ok(Typedef { def })
 }
 
 fn build_struct(st: Pair<Rule>) -> Result<Struct, &'static str> {
@@ -192,11 +188,7 @@ fn build_struct(st: Pair<Rule>) -> Result<Struct, &'static str> {
         }
     }
 
-    Ok(Struct {
-        name: name,
-        props: props,
-        tag: tag,
-    })
+    Ok(Struct { name, props, tag })
 }
 
 fn build_enum_val(en: Pair<Rule>) -> Result<EnumValue, &'static str> {
@@ -214,10 +206,7 @@ fn build_enum_val(en: Pair<Rule>) -> Result<EnumValue, &'static str> {
         }
     }
 
-    Ok(EnumValue {
-        name: name,
-        index: index,
-    })
+    Ok(EnumValue { name, index })
 }
 
 fn build_enum(en: Pair<Rule>) -> Result<Enum, &'static str> {
@@ -236,30 +225,24 @@ fn build_enum(en: Pair<Rule>) -> Result<Enum, &'static str> {
         }
     }
 
-    Ok(Enum {
-        name: name,
-        values: values,
-    })
+    Ok(Enum { name, values })
 }
 
 fn build_case(ca: Pair<Rule>) -> Result<Case, &'static str> {
     let mut value: String = "".to_string();
-    let mut def = Def::default();
+    let mut ret_type = Def::default();
     for node in ca.into_inner() {
         match node.as_rule() {
             Rule::identifier => {
                 value = node.as_str().to_string();
             }
             Rule::type_decl => {
-                def = build_def(node)?;
+                ret_type = build_def(node)?;
             }
             _ => {}
         }
     }
-    Ok(Case {
-        value: value,
-        ret_type: def,
-    })
+    Ok(Case { value, ret_type })
 }
 
 fn build_switch(sw: Pair<Rule>) -> Result<Switch, &'static str> {
@@ -282,9 +265,9 @@ fn build_switch(sw: Pair<Rule>) -> Result<Switch, &'static str> {
     }
 
     Ok(Switch {
-        enum_name: enum_name,
-        enum_type: enum_type,
-        cases: cases,
+        enum_name,
+        enum_type,
+        cases,
     })
 }
 
@@ -323,10 +306,7 @@ fn build_union(un: Pair<Rule>) -> Result<Union, &'static str> {
         }
     }
 
-    Ok(Union {
-        name: name,
-        switch: switch,
-    })
+    Ok(Union { name, switch })
 }
 
 fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
@@ -361,11 +341,11 @@ fn build_namespace(ns: Pair<Rule>) -> Result<Namespace, &'static str> {
     }
 
     Ok(Namespace {
-        name: name,
-        typedefs: typedefs,
-        structs: structs,
-        enums: enums,
-        unions: unions,
+        name,
+        typedefs,
+        structs,
+        enums,
+        unions,
     })
 }
 
@@ -376,12 +356,8 @@ pub fn build_namespaces(raw_idl: String) -> Result<Vec<Namespace>, &'static str>
         .next()
         .unwrap();
     for node in file.into_inner() {
-        match node.as_rule() {
-            Rule::namespace => {
-                let namespace = build_namespace(node)?;
-                namespaces.push(namespace);
-            }
-            _ => {}
+        if node.as_rule() == Rule::namespace {
+            namespaces.push(build_namespace(node)?);
         }
     }
     Ok(namespaces)

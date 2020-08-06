@@ -144,8 +144,7 @@ impl CodeGenerator for JsGenerator {
         let result = reg
             .render_template(file_t.into_boxed_str().as_ref(), &processed)
             .unwrap();
-
-        return Ok(result);
+        Ok(result)
     }
 
     fn language(&self) -> String {

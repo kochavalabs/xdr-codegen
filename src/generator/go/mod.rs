@@ -357,7 +357,7 @@ impl CodeGenerator for GoGenerator {
             .render_template(file_t.into_boxed_str().as_ref(), &processed_ns)
             .unwrap();
 
-        return Ok(result);
+        Ok(result)
     }
 
     fn language(&self) -> String {

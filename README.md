@@ -29,7 +29,7 @@ cargo run test.x --language rust # | rustfmt
 # Go generation
 cargo run test.x --language go # | gofmt
 # Commonjs generation
-cargo run test.x --language commonjs # | esling --stdin
+cargo run test.x --language commonjs # | eslint --stdin
 ```
 
 ## License

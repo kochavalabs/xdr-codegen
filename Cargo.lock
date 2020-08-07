@@ -207,7 +207,8 @@ checksum = "3e2e65a1a2e43cfcb47a895c4c8b10d1f4a61097f9f254f183aee60cad9c651d"
 [[package]]
 name = "mazzaroth-xdr"
 version = "0.2.5"
-source = "git+https://git@github.com/kochavalabs/mazzaroth-xdr.git?branch=develop#36a30466ee59b300bc362d3279adce73b76113be"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c28ce33c203135c804a58971d92178f27710c623dce991af6a310a1907c84ac0"
 dependencies = [
  "json",
  "xdr-rs-serialize",
@@ -538,7 +539,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "xdr-codegen"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "handlebars",
  "mazzaroth-xdr",
@@ -553,7 +554,8 @@ dependencies = [
 [[package]]
 name = "xdr-rs-serialize"
 version = "0.2.3"
-source = "git+https://git@github.com/kochavalabs/xdr-rs-serialize.git?branch=develop#0df7569d02dfe5bf2c308c94955f7b9131abcc4d"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87982228d726c5bf8d0452cb5711802ccfdca742f04417cc920d022fda4c942f"
 dependencies = [
  "base64",
  "hex",
@@ -563,7 +565,8 @@ dependencies = [
 [[package]]
 name = "xdr-rs-serialize-derive"
 version = "0.2.3"
-source = "git+https://git@github.com/kochavalabs/xdr-rs-serialize.git?branch=develop#0df7569d02dfe5bf2c308c94955f7b9131abcc4d"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09124f8f6118981a5ade32e7d179630ff23260697cba71db1389a364809af845"
 dependencies = [
  "proc-macro2 0.4.30",
  "quote 0.6.13",

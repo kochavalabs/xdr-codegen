@@ -8,8 +8,6 @@ pub mod rust;
 
 pub trait CodeGenerator {
     fn code(&self, namespace: Vec<Namespace>) -> Result<String, &'static str>;
-
-    fn language(&self) -> String;
 }
 
 pub fn apply_type_map(

@@ -147,8 +147,4 @@ impl CodeGenerator for JsGenerator {
 
         return Ok(result);
     }
-
-    fn language(&self) -> String {
-        "js".to_string()
-    }
 }

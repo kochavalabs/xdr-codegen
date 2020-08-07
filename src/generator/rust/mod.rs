@@ -159,8 +159,4 @@ impl CodeGenerator for RustGenerator {
 
         return Ok(result);
     }
-
-    fn language(&self) -> String {
-        "rust".to_string()
-    }
 }

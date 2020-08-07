@@ -359,8 +359,4 @@ impl CodeGenerator for GoGenerator {
 
         return Ok(result);
     }
-
-    fn language(&self) -> String {
-        "go".to_string()
-    }
 }

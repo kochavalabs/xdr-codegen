@@ -161,8 +161,4 @@ impl CodeGenerator for CommonJsGenerator {
 
         return Ok(result);
     }
-
-    fn language(&self) -> String {
-        "js".to_string()
-    }
 }

@@ -3,7 +3,17 @@ use handlebars::Handlebars;
 use std::collections::HashMap;
 
 static HEADER: &str = r#"
-import types from 'xdr-js-serialize'
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _xdrJsSerialize = _interopRequireDefault(require("xdr-js-serialize"));
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
 
 {{#each this as |ns| ~}}
 // Namespace start {{ns.name}}
@@ -12,8 +22,9 @@ import types from 'xdr-js-serialize'
 static TYPEDEFS_T: &str = r#"
 // Start typedef section
 {{#each ns.typedefs as |td|}}
-export function {{td.def.name}}() {
-    return {{#typeconv td.def.name td.def.type_name td.def.array_size td.def.fixed_array}}{{/typeconv}}
+exports.{{td.def.name}} = {{td.def.name}};
+function {{td.def.name}}() {
+    return {{#typeconv td.def.name td.def.type_name td.def.array_size td.def.fixed_array}}{{/typeconv}};
 }
 {{/each~}}
 // End typedef section
@@ -22,8 +33,9 @@ export function {{td.def.name}}() {
 static STRUCTS_T: &str = r#"
 // Start struct section
 {{#each ns.structs as |st| ~}}
-export function {{st.name}}() {
-    return new types.Struct(
+exports.{{st.name}} = {{st.name}};
+function {{st.name}}() {
+    return new _xdrJsSerialize.default.Struct(
         [{{#each st.props as |prop| ~}}"{{prop.name}}",{{/each ~}}],
         [{{#each st.props as |prop| ~}}{{#typeconv prop.name prop.type_name prop.array_size prop.fixed_array}}{{/typeconv}},{{/each ~}}]
     )
@@ -35,8 +47,9 @@ export function {{st.name}}() {
 static ENUM_T: &str = r#"
 // Start enum section
 {{#each ns.enums as |enum|}}
-export function {{enum.name}}() {
-    return new types.Enum({
+exports.{{enum.name}} = {{enum.name}};
+function {{enum.name}}() {
+    return new _xdrJsSerialize.default.Enum({
         {{#each enum.values as |val| ~}}
           {{val.index}}: "{{val.name}}",
         {{/each}}
@@ -51,15 +64,16 @@ static UNION_T: &str = r#"
 // Start union section
 
 {{#each ns.unions as |uni|}}
-export function {{uni.name}}() {
-    return new types.Union(
+exports.{{uni.name}} = {{uni.name}};
+function {{uni.name}}() {
+    return new _xdrJsSerialize.default.Union(
         {{uni.switch.enum_type}}(),
         {
             {{#each uni.switch.cases as |case|~}}
                 {{#if (not (isvoid case.ret_type.name))}}
-                    "{{case.value}}": () => { return  {{#typeconv case.ret_type.name case.ret_type.type_name case.ret_type.array_size case.ret_type.fixed_array}}{{/typeconv}} },
+                    "{{case.value}}": function() { return  {{#typeconv case.ret_type.name case.ret_type.type_name case.ret_type.array_size case.ret_type.fixed_array}}{{/typeconv}} },
                 {{else}}
-                    "{{case.value}}": () => { return new types.Void() },
+                    "{{case.value}}": function() { return new _xdrJsSerialize.default.Void() },
                 {{/if}}
             {{/each}}
         }
@@ -75,7 +89,7 @@ static FOOTER: &str = r#"
 "#;
 
 #[derive(Debug, Default)]
-pub struct JsGenerator {}
+pub struct CommonJsGenerator {}
 
 fn build_file_template() -> String {
     format!(
@@ -111,7 +125,7 @@ fn is_built_in_single(def_type: &str) -> bool {
     !is_array_type(def_type) && is_built_in(def_type)
 }
 
-impl CodeGenerator for JsGenerator {
+impl CodeGenerator for CommonJsGenerator {
     fn code(&self, namespaces: Vec<Namespace>) -> Result<String, &'static str> {
         let mut type_map = HashMap::new();
         type_map.insert("boolean", "Bool");
@@ -127,16 +141,16 @@ impl CodeGenerator for JsGenerator {
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
         handlebars_helper!(typeconv: |name: str, typ: str, size: i64, fixed: bool| match (name, typ, size, fixed) {
-            (_, "opaque", _, false) => format!("new types.VarOpaque({})", size),
-            (_, "opaque", _, true) => format!("new types.FixedOpaque({})", size),
-            (_, typ, size, false) if is_built_in_single(typ) && size > 0 => format!("new types.VarArray({}, () => new types.{}())", size, typ),
-            (_, typ, size, false) if !is_array_type(typ) && size > 0 => format!("new types.VarArray({}, {})", size, typ),
-            (_, typ, size, _) if is_built_in_single(typ) && size == 0 => format!("new types.{}()", typ),
-            (_, typ, size, _) if is_built_in_single(typ) && size > 0 => format!("new types.FixedArray({}, () => new types.{}())", size, typ),
+            (_, "opaque", _, false) => format!("new _xdrJsSerialize.default.VarOpaque({})", size),
+            (_, "opaque", _, true) => format!("new _xdrJsSerialize.default.FixedOpaque({})", size),
+            (_, typ, size, false) if is_built_in_single(typ) && size > 0 => format!("new _xdrJsSerialize.default.VarArray({}, () => new _xdrJsSerialize.default.{}())", size, typ),
+            (_, typ, size, false) if !is_array_type(typ) && size > 0 => format!("new _xdrJsSerialize.default.VarArray({}, {})", size, typ),
+            (_, typ, size, _) if is_built_in_single(typ) && size == 0 => format!("new _xdrJsSerialize.default.{}()", typ),
+            (_, typ, size, _) if is_built_in_single(typ) && size > 0 => format!("new _xdrJsSerialize.default.FixedArray({}, () => new _xdrJsSerialize.default.{}())", size, typ),
             (_, typ, size, _) if !is_array_type(typ) && size == 0 => format!("{}()", typ),
-            (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new types.FixedArray({}, {})", size, typ),
-            (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new types.FixedArray({}, {})", size, typ),
-            _ => format!("new types.{}('', {})", typ, size)
+            (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new _xdrJsSerialize.default.FixedArray({}, {})", size, typ),
+            (_, typ, size, _) if !is_array_type(typ) && size > 0 => format!("new _xdrJsSerialize.default.FixedArray({}, {})", size, typ),
+            _ => format!("new _xdrJsSerialize.default.{}('', {})", typ, size)
         });
         handlebars_helper!(isvoid: |x: str| x == "");
         reg.register_helper("isvoid", Box::new(isvoid));

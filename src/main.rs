@@ -61,7 +61,8 @@ fn main() -> io::Result<()> {
             "go" => &generator::go::GoGenerator {},
             "js" => &generator::js::JsGenerator {},
             "rust" => &generator::rust::RustGenerator {},
-            _ => &generator::go::GoGenerator {},
+            "commonjs" => &generator::commonjs::CommonJsGenerator {},
+            _ => panic!("Invalid language selection. Options: go, js, rust commonjs"),
         },
         _ => &generator::go::GoGenerator {},
     };

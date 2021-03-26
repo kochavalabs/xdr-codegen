@@ -122,10 +122,7 @@ static FOOTER: &str = r#"
 {{/each~}}"#;
 
 fn build_file_template() -> String {
-    format!(
-        "{}{}{}{}{}{}",
-        HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER
-    )
+    format!("{}{}{}{}{}{}", HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER)
 }
 
 pub struct RustGenerator {}
@@ -153,9 +150,7 @@ impl CodeGenerator for RustGenerator {
         reg.register_helper("neqstr", Box::new(neqstr));
         reg.register_helper("isvoid", Box::new(isvoid));
         let processed_ns = process_namespaces(namespaces)?;
-        let result = reg
-            .render_template(file_t.into_boxed_str().as_ref(), &processed_ns)
-            .unwrap();
+        let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed_ns).unwrap();
 
         return Ok(result);
     }

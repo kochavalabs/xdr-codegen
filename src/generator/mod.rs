@@ -10,11 +10,7 @@ pub trait CodeGenerator {
     fn code(&self, namespace: Vec<Namespace>) -> Result<String, &'static str>;
 }
 
-
-pub fn apply_type_map(
-    mut namespaces: Vec<Namespace>,
-    type_map: &HashMap<&str, &str>,
-) -> Result<Vec<Namespace>, &'static str> {
+pub fn apply_type_map(mut namespaces: Vec<Namespace>, type_map: &HashMap<&str, &str>) -> Result<Vec<Namespace>, &'static str> {
     for namespace in &mut namespaces {
         for typedef in &mut namespace.typedefs {
             if let Some(&val) = type_map.get(typedef.def.type_name.as_str()) {
@@ -38,4 +34,3 @@ pub fn apply_type_map(
     }
     Ok(namespaces)
 }
-

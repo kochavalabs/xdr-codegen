@@ -78,10 +78,7 @@ static FOOTER: &str = r#"
 pub struct JsGenerator {}
 
 fn build_file_template() -> String {
-    format!(
-        "{}{}{}{}{}{}",
-        HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER
-    )
+    format!("{}{}{}{}{}{}", HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER)
 }
 
 fn is_array_type(def_type: &str) -> bool {
@@ -141,9 +138,7 @@ impl CodeGenerator for JsGenerator {
         handlebars_helper!(isvoid: |x: str| x == "");
         reg.register_helper("isvoid", Box::new(isvoid));
         reg.register_helper("typeconv", Box::new(typeconv));
-        let result = reg
-            .render_template(file_t.into_boxed_str().as_ref(), &processed)
-            .unwrap();
+        let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed).unwrap();
 
         return Ok(result);
     }

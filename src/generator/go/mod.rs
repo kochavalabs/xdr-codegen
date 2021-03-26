@@ -78,15 +78,24 @@ static STRUCTS_T: &str = r#"
 // {{st.name}} generated struct
 type {{st.name}} struct {
 {{#each st.props as |prop|}}
-{{#if prop.array_size}}
-{{#if prop.fixed_array}}
-  {{prop.name}}  {{#if (neqstr prop.type_name) }}[{{prop.array_size}}]{{/if}}{{prop.type_name}}
+{{#if (eqstr prop.type_name)}}
+  {{#if (and (ne prop.array_size 0) (ne prop.array_size 2147483647))}}
+    {{prop.name}} string `xdrmaxsize:"{{prop.array_size}}" json:"{{snake prop.name}}"`
+  {{else}}
+    {{prop.name}} string `json:"{{snake prop.name}}"`
+  {{/if}}
+{{else}} {{#if prop.fixed_array}}
+  {{prop.name}} [{{prop.array_size}}]{{prop.type_name}} `json:"{{snake prop.name}}"`
+{{else}} {{#if prop.array_size}}
+  {{#if (ne prop.array_size 2147483647)}}
+    {{prop.name}} []{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{snake prop.name}}"`
+  {{else}}
+    {{prop.name}} []{{prop.type_name}} `json:"{{snake prop.name}}"`
+  {{/if}}
 {{else}}
-  {{prop.name}} {{#if (neqstr prop.type_name)}}[]{{/if}}{{prop.type_name ~}}
-  {{#if (ne prop.array_size 2147483647) }}  `xdrmaxsize:"{{prop.array_size}}"` {{/if}}
+  {{prop.name}} {{prop.type_name}} `json:"{{snake prop.name}}"`
 {{/if}}
-{{else}}
-  {{prop.name}}  {{prop.type_name}}
+{{/if}}
 {{/if}}
 {{/each~}}
 }
@@ -327,19 +336,109 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
     Ok(ret_val)
 }
 
+fn to_snake(value: &str) -> String {
+    use inflector::Inflector;
+    value.to_snake_case()
+}
+
 impl CodeGenerator for GoGenerator {
     fn code(&self, namespaces: Vec<Namespace>) -> Result<String, &'static str> {
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
         handlebars_helper!(neqstr: |x: str| x != "string");
+        handlebars_helper!(eqstr: |x: str| x == "string");
         handlebars_helper!(isvoid: |x: str| x == "");
+        handlebars_helper!(snake: |x: str| to_snake(x));
         reg.register_helper("neqstr", Box::new(neqstr));
+        reg.register_helper("eqstr", Box::new(eqstr));
         reg.register_helper("isvoid", Box::new(isvoid));
         let processed_ns = process_namespaces(namespaces)?;
-        let result = reg
-            .render_template(file_t.into_boxed_str().as_ref(), &processed_ns)
-            .unwrap();
+        reg.register_helper("snake", Box::new(snake));
+        let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed_ns).unwrap();
 
-        return Ok(result);
+        Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn empty_namespace() {
+        let input_test = vec![Namespace {
+            enums: Vec::new(),
+            structs: Vec::new(),
+            typedefs: Vec::new(),
+            unions: Vec::new(),
+            name: String::from("test"),
+        }];
+        let res = GoGenerator {}.code(input_test);
+        assert!(res.is_ok());
+    }
+    #[test]
+    fn typedef_namespace() {
+        let input_test = vec![Namespace {
+            enums: Vec::new(),
+            structs: Vec::new(),
+            typedefs: vec![Typedef {
+                def: Def {
+                    name: String::from("testt"),
+                    type_name: String::from("string"),
+                    array_size: 0,
+                    fixed_array: false,
+                    tag: String::new(),
+                },
+            }],
+            unions: Vec::new(),
+            name: String::from("test"),
+        }];
+        let res = GoGenerator {}.code(input_test);
+        assert!(res.is_ok());
+        let generated_code = res.unwrap();
+        assert!(generated_code.contains("func (s Testt) MarshalBinary() ([]byte, error)"));
+        assert!(generated_code.contains("func (s *Testt) UnmarshalBinary(inp []byte) error"));
+    }
+    #[test]
+    fn struct_namespace() {
+        let input_test = vec![Namespace {
+            enums: Vec::new(),
+            typedefs: Vec::new(),
+            structs: vec![Struct {
+                name: String::from("TestStruct"),
+                props: vec![
+                    Def {
+                        name: String::from("p1"),
+                        type_name: String::from("string"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                    Def {
+                        name: String::from("p2"),
+                        type_name: String::from("boolean"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                    Def {
+                        name: String::from("p3"),
+                        type_name: String::from("float"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                ],
+                tag: String::new(),
+            }],
+            unions: Vec::new(),
+            name: String::from("test"),
+        }];
+        let res = GoGenerator {}.code(input_test);
+        assert!(res.is_ok());
+        let generated_code = res.unwrap();
+        assert!(generated_code.contains("type TestStruct struct {"));
+        assert!(generated_code.contains("P1 string `json:\"p1\"`"));
+        assert!(generated_code.contains("P2 bool `json:\"p2\"`"));
+        assert!(generated_code.contains("P3 float32 `json:\"p3\"`"));
     }
 }

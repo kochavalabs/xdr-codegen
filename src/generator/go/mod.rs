@@ -276,10 +276,7 @@ var fmtTest = fmt.Sprint("this is a dummy usage of fmt")
 pub struct GoGenerator {}
 
 fn build_file_template() -> String {
-    format!(
-        "{}{}{}{}{}{}",
-        HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER
-    )
+    format!("{}{}{}{}{}{}", HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER)
 }
 
 fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'static str> {
@@ -292,51 +289,37 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
     type_map.insert("unsigned hyper", "uint64");
     type_map.insert("float", "float32");
     type_map.insert("double", "float64");
-    let mut ret_val = apply_type_map(namespaces, type_map)?;
-    for n_i in 0..ret_val.len() {
-        for td_i in 0..ret_val[n_i].typedefs.len() {
-            ret_val[n_i].typedefs[td_i].def.name = format!(
-                "{}{}",
-                &ret_val[n_i].typedefs[td_i].def.name[0..1].to_uppercase(),
-                &ret_val[n_i].typedefs[td_i].def.name
-                    [1..ret_val[n_i].typedefs[td_i].def.name.len()]
-            );
+    let mut ret_val = apply_type_map(namespaces, &type_map)?;
+    for namespace in &mut ret_val {
+        for typedef_ in &mut namespace.typedefs {
+            typedef_.def.name = typedef_
+                .def
+                .name
+                .chars()
+                .enumerate()
+                .map(|(idx, c)| if idx == 0 { c.to_ascii_uppercase() } else { c })
+                .collect();
         }
-        for str_i in 0..ret_val[n_i].structs.len() {
-            for st_def_i in 0..ret_val[n_i].structs[str_i].props.len() {
-                ret_val[n_i].structs[str_i].props[st_def_i].name = format!(
-                    "{}{}",
-                    &ret_val[n_i].structs[str_i].props[st_def_i].name[0..1].to_uppercase(),
-                    &ret_val[n_i].structs[str_i].props[st_def_i].name
-                        [1..ret_val[n_i].structs[str_i].props[st_def_i].name.len()]
-                );
+        for struct_ in &mut namespace.structs {
+            for prop in &mut struct_.props {
+                prop.name = prop
+                    .name
+                    .chars()
+                    .enumerate()
+                    .map(|(idx, c)| if idx == 0 { c.to_ascii_uppercase() } else { c })
+                    .collect();
             }
         }
 
-        for uni_i in 0..ret_val[n_i].unions.len() {
-            for case_i in 0..ret_val[n_i].unions[uni_i].switch.cases.len() {
-                if ret_val[n_i].unions[uni_i].switch.cases[case_i]
+        for union_ in &mut namespace.unions {
+            for switch_case in &mut union_.switch.cases {
+                switch_case.ret_type.name = switch_case
                     .ret_type
                     .name
-                    == "".to_string()
-                {
-                    continue;
-                }
-                ret_val[n_i].unions[uni_i].switch.cases[case_i]
-                    .ret_type
-                    .name = format!(
-                    "{}{}",
-                    &ret_val[n_i].unions[uni_i].switch.cases[case_i]
-                        .ret_type
-                        .name[0..1]
-                        .to_uppercase(),
-                    &ret_val[n_i].unions[uni_i].switch.cases[case_i]
-                        .ret_type
-                        .name[1..ret_val[n_i].unions[uni_i].switch.cases[case_i]
-                        .ret_type
-                        .name
-                        .len()]
-                );
+                    .chars()
+                    .enumerate()
+                    .map(|(idx, c)| if idx == 0 { c.to_ascii_uppercase() } else { c })
+                    .collect();
             }
         }
     }

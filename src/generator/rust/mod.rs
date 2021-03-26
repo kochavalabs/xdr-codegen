@@ -141,7 +141,7 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
     type_map.insert("float", "f32");
     type_map.insert("double", "f64");
     type_map.insert("string", "String");
-    apply_type_map(namespaces, type_map)
+    apply_type_map(namespaces, &type_map)
 }
 
 impl CodeGenerator for RustGenerator {

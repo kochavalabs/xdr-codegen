@@ -123,7 +123,7 @@ impl CodeGenerator for JsGenerator {
         type_map.insert("float", "Float");
         type_map.insert("double", "Double");
         type_map.insert("void", "Void");
-        let processed = apply_type_map(namespaces, type_map)?;
+        let processed = apply_type_map(namespaces, &type_map)?;
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
         handlebars_helper!(typeconv: |name: str, typ: str, size: i64, fixed: bool| match (name, typ, size, fixed) {

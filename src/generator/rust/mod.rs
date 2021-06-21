@@ -97,9 +97,18 @@ static UNION_T: &str = r#"
 pub enum {{uni.name}} {
 {{#each uni.switch.cases as |case|}}
 {{#if (not (isvoid case.ret_type.name))}}
-  {{case.value}}({{case.ret_type.type_name}}),
+    {{#if case.ret_type.array_size}}
+        {{#if case.ret_type.fixed_array}}
+            #[array(fixed = {{case.ret_type.array_size}})]
+        {{else}}
+            #[array(var = {{case.ret_type.array_size}})]
+        {{/if}}
+        {{case.value}}(Vec<{{case.ret_type.type_name}}>),
+    {{else}}
+        {{case.value}}({{case.ret_type.type_name}}),
+    {{/if}}
 {{else}}
-  {{case.value}}(()),
+  {{case.value}},
 {{/if}}
 {{/each~}}
 }

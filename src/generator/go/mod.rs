@@ -183,7 +183,11 @@ type {{uni.name}} struct{
   {{uni.switch.enum_name}} {{uni.switch.enum_type}}
 {{#each uni.switch.cases as |case|}}
 {{#if (not (isvoid case.ret_type.name))}}
-  {{case.ret_type.name}} *{{case.ret_type.type_name}}
+    {{#if case.ret_type.array_size}}
+        {{case.ret_type.name}} *[]{{case.ret_type.type_name}}
+    {{else}}
+        {{case.ret_type.name}} *{{case.ret_type.type_name}}
+    {{/if}}
 {{/if}}
 {{/each~}}
 }
@@ -213,7 +217,11 @@ switch {{uni.enum_type}}(aType) {
 {{#each uni.switch.cases as |case|}}
   case {{uni.switch.enum_type}}{{case.value}}:
 {{#if (not (isvoid case.ret_type.name))}}
-    tv, ok := value.({{case.ret_type.type_name}})
+    {{#if case.ret_type.array_size}}
+        tv, ok := value.([]{{case.ret_type.type_name}})
+    {{else}}
+        tv, ok := value.({{case.ret_type.type_name}})
+    {{/if}}
     if !ok {
         err = fmt.Errorf("invalid value, must be {{case.ret_type}}")
         return
@@ -229,7 +237,11 @@ switch {{uni.enum_type}}(aType) {
 {{#if (not (isvoid case.ret_type.name))}}
 // Must{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // panicing if the value is not set.
-func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
+    {{#if case.ret_type.array_size}}
+    func (u {{uni.name}}) Must{{case.ret_type.name}}() []{{case.ret_type.type_name}} {
+    {{else}}
+    func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
+    {{/if}}
   val, ok := u.Get{{case.ret_type.name}}()
 
   if !ok {
@@ -241,7 +253,11 @@ func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
 
 // Get{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // returning ok if the union's switch indicated the value is valid.
+    {{#if case.ret_type.array_size}}
+func (u {{uni.name}}) Get{{case.ret_type.name}}() (result []{{case.ret_type.type_name}}, ok bool) {
+    {{else}}
 func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
+    {{/if}}
   armName, _ := u.ArmForSwitch(int32(u.Type))
 
   if armName == "{{case.ret_type.name}}" {

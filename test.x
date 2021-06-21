@@ -131,8 +131,9 @@ namespace mazzaroth
     enum TestUnionSwitchArrayEnum {
         Type_Int = 0,
         Type_String = 1,
-        Type_Array = 2,
-        Type_Empty = 3
+        Type_FixedString = 2,
+        Type_Array = 3,
+        Type_Empty = 4
     };
 
     union TestUnionSwitchArrayUnion switch (TestUnionSwitchArrayEnum Type)
@@ -140,7 +141,9 @@ namespace mazzaroth
         case Type_Int:
             hyper anInt;
         case Type_String:
-            string aString;
+            string aString<>;
+        case Type_FixedString:
+            string fixedString<36>;
         case Type_Array:
             boolean bools<>;
         case Type_Empty:

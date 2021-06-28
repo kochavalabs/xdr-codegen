@@ -356,8 +356,8 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
 fn to_first_lower(value: &str) -> String {
     let mut c = value.chars();
     match c.next() {
-      None => String::new(),
-      Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
+        None => String::new(),
+        Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
     }
 }
 

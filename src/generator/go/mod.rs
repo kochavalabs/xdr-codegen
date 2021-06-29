@@ -80,20 +80,20 @@ type {{st.name}} struct {
 {{#each st.props as |prop|}}
 {{#if (eqstr prop.type_name)}}
   {{#if (and (ne prop.array_size 0) (ne prop.array_size 2147483647))}}
-    {{prop.name}} string `xdrmaxsize:"{{prop.array_size}}" json:"{{snake prop.name}}"`
+    {{prop.name}} string `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
   {{else}}
-    {{prop.name}} string `json:"{{snake prop.name}}"`
+    {{prop.name}} string `json:"{{lower prop.name}}"`
   {{/if}}
 {{else}} {{#if prop.fixed_array}}
-  {{prop.name}} [{{prop.array_size}}]{{prop.type_name}} `json:"{{snake prop.name}}"`
+  {{prop.name}} [{{prop.array_size}}]{{prop.type_name}} `json:"{{lower prop.name}}"`
 {{else}} {{#if prop.array_size}}
   {{#if (ne prop.array_size 2147483647)}}
-    {{prop.name}} []{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{snake prop.name}}"`
+    {{prop.name}} []{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
   {{else}}
-    {{prop.name}} []{{prop.type_name}} `json:"{{snake prop.name}}"`
+    {{prop.name}} []{{prop.type_name}} `json:"{{lower prop.name}}"`
   {{/if}}
 {{else}}
-  {{prop.name}} {{prop.type_name}} `json:"{{snake prop.name}}"`
+  {{prop.name}} {{prop.type_name}} `json:"{{lower prop.name}}"`
 {{/if}}
 {{/if}}
 {{/if}}
@@ -353,9 +353,12 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
     Ok(ret_val)
 }
 
-fn to_snake(value: &str) -> String {
-    use inflector::Inflector;
-    value.to_snake_case()
+fn to_first_lower(value: &str) -> String {
+    let mut c = value.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
+    }
 }
 
 impl CodeGenerator for GoGenerator {
@@ -365,12 +368,12 @@ impl CodeGenerator for GoGenerator {
         handlebars_helper!(neqstr: |x: str| x != "string");
         handlebars_helper!(eqstr: |x: str| x == "string");
         handlebars_helper!(isvoid: |x: str| x == "");
-        handlebars_helper!(snake: |x: str| to_snake(x));
+        handlebars_helper!(lower: |x: str| to_first_lower(x));
         reg.register_helper("neqstr", Box::new(neqstr));
         reg.register_helper("eqstr", Box::new(eqstr));
         reg.register_helper("isvoid", Box::new(isvoid));
         let processed_ns = process_namespaces(namespaces)?;
-        reg.register_helper("snake", Box::new(snake));
+        reg.register_helper("lower", Box::new(lower));
         let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed_ns).unwrap();
 
         Ok(result)
@@ -424,21 +427,21 @@ mod tests {
                 name: String::from("TestStruct"),
                 props: vec![
                     Def {
-                        name: String::from("p1"),
+                        name: String::from("stringTest"),
                         type_name: String::from("string"),
                         array_size: 0,
                         fixed_array: false,
                         tag: String::new(),
                     },
                     Def {
-                        name: String::from("p2"),
+                        name: String::from("BooleanTest"),
                         type_name: String::from("boolean"),
                         array_size: 0,
                         fixed_array: false,
                         tag: String::new(),
                     },
                     Def {
-                        name: String::from("p3"),
+                        name: String::from("float_test"),
                         type_name: String::from("float"),
                         array_size: 0,
                         fixed_array: false,
@@ -454,8 +457,8 @@ mod tests {
         assert!(res.is_ok());
         let generated_code = res.unwrap();
         assert!(generated_code.contains("type TestStruct struct {"));
-        assert!(generated_code.contains("P1 string `json:\"p1\"`"));
-        assert!(generated_code.contains("P2 bool `json:\"p2\"`"));
-        assert!(generated_code.contains("P3 float32 `json:\"p3\"`"));
+        assert!(generated_code.contains("StringTest string `json:\"stringTest\"`"));
+        assert!(generated_code.contains("BooleanTest bool `json:\"booleanTest\"`"));
+        assert!(generated_code.contains("Float_test float32 `json:\"float_test\"`"));
     }
 }

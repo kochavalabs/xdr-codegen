@@ -10,47 +10,27 @@ pub trait CodeGenerator {
     fn code(&self, namespace: Vec<Namespace>) -> Result<String, &'static str>;
 }
 
-pub fn apply_type_map(
-    namespaces: Vec<Namespace>,
-    type_map: HashMap<&str, &str>,
-) -> Result<Vec<Namespace>, &'static str> {
-    let mut ret_val = namespaces.clone();
-    for n_i in 0..ret_val.len() {
-        for td_i in 0..ret_val[n_i].typedefs.len() {
-            match type_map.get(&ret_val[n_i].typedefs[td_i].def.type_name[..]) {
-                Some(&val) => {
-                    ret_val[n_i].typedefs[td_i].def.type_name = val.to_string();
-                }
-                _ => {}
+pub fn apply_type_map(mut namespaces: Vec<Namespace>, type_map: &HashMap<&str, &str>) -> Result<Vec<Namespace>, &'static str> {
+    for namespace in &mut namespaces {
+        for typedef in &mut namespace.typedefs {
+            if let Some(&val) = type_map.get(typedef.def.type_name.as_str()) {
+                typedef.def.type_name = val.to_string();
             }
         }
-        for str_i in 0..ret_val[n_i].structs.len() {
-            for st_def_i in 0..ret_val[n_i].structs[str_i].props.len() {
-                match type_map.get(&ret_val[n_i].structs[str_i].props[st_def_i].type_name[..]) {
-                    Some(&val) => {
-                        ret_val[n_i].structs[str_i].props[st_def_i].type_name = val.to_string();
-                    }
-                    _ => {}
+        for struct_ in &mut namespace.structs {
+            for prop in &mut struct_.props {
+                if let Some(&val) = type_map.get(prop.type_name.as_str()) {
+                    prop.type_name = val.to_string();
                 }
             }
         }
-
-        for uni_i in 0..ret_val[n_i].unions.len() {
-            for case_i in 0..ret_val[n_i].unions[uni_i].switch.cases.len() {
-                match type_map.get(
-                    &ret_val[n_i].unions[uni_i].switch.cases[case_i]
-                        .ret_type
-                        .type_name[..],
-                ) {
-                    Some(&val) => {
-                        ret_val[n_i].unions[uni_i].switch.cases[case_i]
-                            .ret_type
-                            .type_name = val.to_string();
-                    }
-                    _ => {}
+        for union_ in &mut namespace.unions {
+            for switch_case in &mut union_.switch.cases {
+                if let Some(&val) = type_map.get(switch_case.ret_type.type_name.as_str()) {
+                    switch_case.ret_type.type_name = val.to_string();
                 }
             }
         }
     }
-    Ok(ret_val)
+    Ok(namespaces)
 }

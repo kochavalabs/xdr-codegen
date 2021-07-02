@@ -92,10 +92,7 @@ static FOOTER: &str = r#"
 pub struct CommonJsGenerator {}
 
 fn build_file_template() -> String {
-    format!(
-        "{}{}{}{}{}{}",
-        HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER
-    )
+    format!("{}{}{}{}{}{}", HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER)
 }
 
 fn is_array_type(def_type: &str) -> bool {
@@ -137,7 +134,7 @@ impl CodeGenerator for CommonJsGenerator {
         type_map.insert("float", "Float");
         type_map.insert("double", "Double");
         type_map.insert("void", "Void");
-        let processed = apply_type_map(namespaces, type_map)?;
+        let processed = apply_type_map(namespaces, &type_map)?;
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
         handlebars_helper!(typeconv: |name: str, typ: str, size: i64, fixed: bool| match (name, typ, size, fixed) {
@@ -155,9 +152,7 @@ impl CodeGenerator for CommonJsGenerator {
         handlebars_helper!(isvoid: |x: str| x == "");
         reg.register_helper("isvoid", Box::new(isvoid));
         reg.register_helper("typeconv", Box::new(typeconv));
-        let result = reg
-            .render_template(file_t.into_boxed_str().as_ref(), &processed)
-            .unwrap();
+        let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed).unwrap();
 
         return Ok(result);
     }

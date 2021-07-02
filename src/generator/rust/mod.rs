@@ -97,7 +97,18 @@ static UNION_T: &str = r#"
 pub enum {{uni.name}} {
 {{#each uni.switch.cases as |case|}}
 {{#if (not (isvoid case.ret_type.name))}}
-  {{case.value}}({{case.ret_type.type_name}}),
+    {{#if (eqstr case.ret_type.type_name)}}
+        {{case.value}}({{case.ret_type.type_name}}),
+    {{else}} {{#if case.ret_type.array_size}}
+        {{#if case.ret_type.fixed_array}}
+            #[array(fixed = {{case.ret_type.array_size}})]
+        {{else}}
+            #[array(var = {{case.ret_type.array_size}})]
+        {{/if}}
+        {{case.value}}(Vec<{{case.ret_type.type_name}}>),
+    {{else}}
+        {{case.value}}({{case.ret_type.type_name}}),
+    {{/if}} {{/if}}
 {{else}}
   {{case.value}}(()),
 {{/if}}
@@ -122,10 +133,7 @@ static FOOTER: &str = r#"
 {{/each~}}"#;
 
 fn build_file_template() -> String {
-    format!(
-        "{}{}{}{}{}{}",
-        HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER
-    )
+    format!("{}{}{}{}{}{}", HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER)
 }
 
 pub struct RustGenerator {}
@@ -141,7 +149,7 @@ fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'st
     type_map.insert("float", "f32");
     type_map.insert("double", "f64");
     type_map.insert("string", "String");
-    apply_type_map(namespaces, type_map)
+    apply_type_map(namespaces, &type_map)
 }
 
 impl CodeGenerator for RustGenerator {
@@ -149,13 +157,13 @@ impl CodeGenerator for RustGenerator {
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
         handlebars_helper!(neqstr: |x: str| x != "String");
+        handlebars_helper!(eqstr: |x: str| x == "String");
         handlebars_helper!(isvoid: |x: str| x == "");
         reg.register_helper("neqstr", Box::new(neqstr));
+        reg.register_helper("eqstr", Box::new(eqstr));
         reg.register_helper("isvoid", Box::new(isvoid));
         let processed_ns = process_namespaces(namespaces)?;
-        let result = reg
-            .render_template(file_t.into_boxed_str().as_ref(), &processed_ns)
-            .unwrap();
+        let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed_ns).unwrap();
 
         return Ok(result);
     }

@@ -156,9 +156,9 @@ dependencies = [
 
 [[package]]
 name = "hex"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "itoa"
@@ -523,7 +523,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "xdr-codegen"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "handlebars",
  "pest",
@@ -536,9 +536,9 @@ dependencies = [
 
 [[package]]
 name = "xdr-rs-serialize"
-version = "0.2.5"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4bc1e5369f228d4fb05a58a64d03cf37f317712b3355e6ee2cc8cce431537ea"
+checksum = "d74e59c0da611180cb84c3a4bee415ad3104358bfae61a688a2167414b1770bd"
 dependencies = [
  "base64",
  "hex",

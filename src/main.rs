@@ -1,4 +1,3 @@
-extern crate mazzaroth_xdr;
 extern crate pest;
 extern crate structopt;
 extern crate xdr_rs_serialize;

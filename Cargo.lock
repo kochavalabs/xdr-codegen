@@ -200,17 +200,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e2e65a1a2e43cfcb47a895c4c8b10d1f4a61097f9f254f183aee60cad9c651d"
 
 [[package]]
-name = "mazzaroth-xdr"
-version = "0.2.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4551c080d1184f8f9ba47c0356a70d7f78f3a7754699a4a8330386f95c86b622"
-dependencies = [
- "json",
- "xdr-rs-serialize",
- "xdr-rs-serialize-derive",
-]
-
-[[package]]
 name = "memchr"
 version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -537,7 +526,6 @@ name = "xdr-codegen"
 version = "0.2.2"
 dependencies = [
  "handlebars",
- "mazzaroth-xdr",
  "pest",
  "pest_derive",
  "serde",
@@ -555,15 +543,4 @@ dependencies = [
  "base64",
  "hex",
  "json",
-]
-
-[[package]]
-name = "xdr-rs-serialize-derive"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01de1017ed1803d107d4a7e5b5bb653b5e40fc9fa020383d42ceb1fed7c7bb5d"
-dependencies = [
- "proc-macro2 0.4.30",
- "quote 0.6.13",
- "syn 0.15.44",
 ]

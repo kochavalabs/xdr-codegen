@@ -1,6 +1,6 @@
 [package]
 name = "xdr-codegen"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Kochavalabs <dev@mazzaroth.io>"]
 description = "XDR code generation"
 license = "MIT"

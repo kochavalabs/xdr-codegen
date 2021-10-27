@@ -10,6 +10,7 @@ package xdr
 import (
   "bytes"
   "encoding"
+  "encoding/json"
   "io"
   "fmt"
 
@@ -288,12 +289,69 @@ var (
   _ encoding.BinaryMarshaler   = (*{{uni.name}})(nil)
   _ encoding.BinaryUnmarshaler = (*{{uni.name}})(nil)
 )
+
+// MarshalJSON implements json.Marshaler.
+func (u {{uni.name}}) MarshalJSON() ([]byte, error) {
+  temp := struct {
+		Type int32       `json:"type"`
+		Data interface{} `json:"data"`
+	}{}
+
+  temp.Type = int32(u.Type)
+  temp.Data = ""
+  switch u.Type {
+  {{#each uni.switch.cases as |case|}} case {{uni.switch.enum_type}}{{case.value}}:
+    {{#if (not (isvoid case.ret_type.name))}} temp.Data = u.{{case.ret_type.name}}
+    {{/if}}{{/each~}}
+  default:
+      return nil, fmt.Errorf("invalid union type")
+  }
+
+  return json.Marshal(temp)
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (u *{{uni.name}}) UnmarshalJSON(data []byte) error {
+  temp := struct {
+		Type int32 `json:"type"`
+	}{}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+
+  u.Type = {{uni.switch.enum_type}}(temp.Type)
+	switch u.Type {
+  {{#each uni.switch.cases as |case|}} case {{uni.switch.enum_type}}{{case.value}}:
+    {{#if (not (isvoid case.ret_type.name))}} response := struct {
+      {{#if (eqstr case.ret_type.type_name)}}
+        {{case.ret_type.name}} {{case.ret_type.type_name}} `json:"data"`
+      {{else}} {{#if case.ret_type.array_size}}
+          {{case.ret_type.name}} []{{case.ret_type.type_name}} `json:"data"`
+               {{else}}
+          {{case.ret_type.name}} {{case.ret_type.type_name}} `json:"data"`
+               {{/if}}
+      {{/if}}
+      }{}
+      err := json.Unmarshal(data, &response)
+      if err != nil {
+        return err
+      }
+      u.{{case.ret_type.name}} = &response.{{case.ret_type.name}}
+    {{/if}}
+  {{/each~}}
+  default:
+    return fmt.Errorf("invalid union type")
+  }
+
+  return nil
+}
+
 {{/each~}}
 // End union section
 "#;
 
 static FOOTER: &str = r#"
-// Namspace end {{ns.name}}
+// Namespace end {{ns.name}}
 {{/each~}}
 var fmtTest = fmt.Sprint("this is a dummy usage of fmt")
 "#;

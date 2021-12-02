@@ -153,7 +153,7 @@ func (s {{enum.name}}) ValidEnum(v int32) bool {
 }
 // String returns the name of `e`
 func (s {{enum.name}}) String() string {
-  name, _ := {{enum.name}}Map[int32(s)]
+  name := {{enum.name}}Map[int32(s)]
   return name
 }
 

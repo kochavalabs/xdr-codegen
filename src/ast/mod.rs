@@ -67,6 +67,7 @@ pub struct Case {
 #[derive(Debug, Default, Clone, Serialize)]
 pub struct Typedef {
     pub def: Def,
+    // pub builtin: bool,
 }
 
 #[derive(Debug, Default, Clone, Serialize)]
@@ -171,7 +172,10 @@ fn build_typedef(td: Pair<Rule>) -> Result<Typedef, &'static str> {
             _ => {}
         }
     }
-    Ok(Typedef { def: def })
+    Ok(Typedef {
+        def: def,
+        // builtin: false,
+    })
 }
 
 fn build_struct(st: Pair<Rule>) -> Result<Struct, &'static str> {

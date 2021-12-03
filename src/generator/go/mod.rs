@@ -1,6 +1,8 @@
 use super::*;
-use handlebars::Handlebars;
+use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext, RenderError};
 use std::collections::HashMap;
+
+use crate::handlebars::Renderable;
 
 static HEADER: &str = r#"
 // Package xdr is automatically generated
@@ -425,19 +427,60 @@ fn to_first_lower(value: &str) -> String {
     }
 }
 
+// implement by a structure impls HelperDef
+#[derive(Clone)]
+struct StructHelper {
+    struct_map: HashMap<String, bool>,
+}
+
+impl HelperDef for StructHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'reg, 'rc>,
+        _: &'reg Handlebars,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let param = h
+            .param(0)
+            .ok_or_else(|| RenderError::new("Param not found for helper \"eqstruct\""))?;
+
+        // Remove beginning and ending quote from json string to get key
+        let input = &param.value().to_string();
+        let key = &input[1..input.len() - 1];
+
+        if self.struct_map.contains_key(key) {
+            out.write("true")?;
+        }
+
+        Ok(())
+    }
+}
+
 impl CodeGenerator for GoGenerator {
     fn code(&self, namespaces: Vec<Namespace>) -> Result<String, &'static str> {
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
+
+        // Get a map of struct names used
+        let mut struct_map: HashMap<String, bool> = HashMap::new();
+        for namespace in namespaces.clone() {
+            for struct_ in namespace.structs {
+                struct_map.insert(struct_.name, true);
+            }
+        }
+
+        let struct_helper = StructHelper { struct_map: struct_map };
+
         handlebars_helper!(neqstr: |x: str| x != "string");
         handlebars_helper!(eqstr: |x: str| x == "string");
-        handlebars_helper!(eqstruct: |x: str| x != "string" && x != "bool" && x != "byte" && x != "int32" && x != "uint32" && x != "int64" && x != "uint64" && x != "float32" && x != "float64" );
         handlebars_helper!(bignum: |x: str| x == "uint64" || x =="int64");
         handlebars_helper!(isvoid: |x: str| x == "");
         handlebars_helper!(lower: |x: str| to_first_lower(x));
         reg.register_helper("neqstr", Box::new(neqstr));
         reg.register_helper("eqstr", Box::new(eqstr));
-        reg.register_helper("eqstruct", Box::new(eqstruct));
+        reg.register_helper("eqstruct", Box::new(struct_helper));
         reg.register_helper("bignum", Box::new(bignum));
         reg.register_helper("isvoid", Box::new(isvoid));
         let processed_ns = process_namespaces(namespaces)?;
@@ -491,74 +534,88 @@ mod tests {
         let input_test = vec![Namespace {
             enums: Vec::new(),
             typedefs: Vec::new(),
-            structs: vec![Struct {
-                name: String::from("TestStruct"),
-                props: vec![
-                    Def {
+            structs: vec![
+                Struct {
+                    name: String::from("TestStruct"),
+                    props: vec![
+                        Def {
+                            name: String::from("stringTest"),
+                            type_name: String::from("string"),
+                            array_size: 0,
+                            fixed_array: false,
+                            tag: String::new(),
+                        },
+                        Def {
+                            name: String::from("BooleanTest"),
+                            type_name: String::from("boolean"),
+                            array_size: 0,
+                            fixed_array: false,
+                            tag: String::new(),
+                        },
+                        Def {
+                            name: String::from("float_test"),
+                            type_name: String::from("float"),
+                            array_size: 0,
+                            fixed_array: false,
+                            tag: String::new(),
+                        },
+                        Def {
+                            name: String::from("int_test"),
+                            type_name: String::from("int"),
+                            array_size: 0,
+                            fixed_array: false,
+                            tag: String::new(),
+                        },
+                        Def {
+                            name: String::from("unsigned_int_test"),
+                            type_name: String::from("unsigned int"),
+                            array_size: 0,
+                            fixed_array: false,
+                            tag: String::new(),
+                        },
+                        Def {
+                            name: String::from("hyper_test"),
+                            type_name: String::from("hyper"),
+                            array_size: 0,
+                            fixed_array: false,
+                            tag: String::new(),
+                        },
+                        Def {
+                            name: String::from("unsigned_hyper_test"),
+                            type_name: String::from("unsigned hyper"),
+                            array_size: 0,
+                            fixed_array: false,
+                            tag: String::new(),
+                        },
+                        Def {
+                            name: String::from("struct_test"),
+                            type_name: String::from("TestStruct2"),
+                            array_size: 0,
+                            fixed_array: false,
+                            tag: String::new(),
+                        },
+                    ],
+                    tag: String::new(),
+                },
+                Struct {
+                    name: String::from("TestStruct2"),
+                    props: vec![Def {
                         name: String::from("stringTest"),
                         type_name: String::from("string"),
                         array_size: 0,
                         fixed_array: false,
                         tag: String::new(),
-                    },
-                    Def {
-                        name: String::from("BooleanTest"),
-                        type_name: String::from("boolean"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                    Def {
-                        name: String::from("float_test"),
-                        type_name: String::from("float"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                    Def {
-                        name: String::from("int_test"),
-                        type_name: String::from("int"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                    Def {
-                        name: String::from("unsigned_int_test"),
-                        type_name: String::from("unsigned int"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                    Def {
-                        name: String::from("hyper_test"),
-                        type_name: String::from("hyper"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                    Def {
-                        name: String::from("unsigned_hyper_test"),
-                        type_name: String::from("unsigned hyper"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                    Def {
-                        name: String::from("struct_test"),
-                        type_name: String::from("Test"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                ],
-                tag: String::new(),
-            }],
+                    }],
+                    tag: String::new(),
+                },
+            ],
             unions: Vec::new(),
             name: String::from("test"),
         }];
         let res = GoGenerator {}.code(input_test);
         assert!(res.is_ok());
         let generated_code = res.unwrap();
+        println!("{}", generated_code);
         assert!(generated_code.contains("type TestStruct struct {"));
         assert!(generated_code.contains("StringTest string `json:\"stringTest\"`"));
         assert!(generated_code.contains("BooleanTest bool `json:\"booleanTest\"`"));
@@ -567,6 +624,6 @@ mod tests {
         assert!(generated_code.contains("Unsigned_int_test uint32 `json:\"unsigned_int_test\"`"));
         assert!(generated_code.contains("Hyper_test int64 `json:\"hyper_test,string\"`"));
         assert!(generated_code.contains("Unsigned_hyper_test uint64 `json:\"unsigned_hyper_test,string\"`"));
-        assert!(generated_code.contains("Struct_test *Test `json:\"struct_test\"`"));
+        assert!(generated_code.contains("Struct_test *TestStruct2 `json:\"struct_test\"`"));
     }
 }

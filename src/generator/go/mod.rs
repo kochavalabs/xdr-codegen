@@ -95,8 +95,11 @@ type {{st.name}} struct {
   {{/if}}
 {{else}} {{#if (bignum prop.type_name)}}
   {{prop.name}} {{prop.type_name}} `json:"{{lower prop.name}},string"`
+{{else}} {{#if (eqstruct prop.type_name)}}
+  {{prop.name}} *{{prop.type_name}} `json:"{{lower prop.name}}"`
 {{else}}
   {{prop.name}} {{prop.type_name}} `json:"{{lower prop.name}}"`
+{{/if}}
 {{/if}}
 {{/if}}
 {{/if}}
@@ -428,11 +431,13 @@ impl CodeGenerator for GoGenerator {
         let file_t = build_file_template();
         handlebars_helper!(neqstr: |x: str| x != "string");
         handlebars_helper!(eqstr: |x: str| x == "string");
+        handlebars_helper!(eqstruct: |x: str| x != "string" && x != "bool" && x != "byte" && x != "int32" && x != "uint32" && x != "int64" && x != "uint64" && x != "float32" && x != "float64" );
         handlebars_helper!(bignum: |x: str| x == "uint64" || x =="int64");
         handlebars_helper!(isvoid: |x: str| x == "");
         handlebars_helper!(lower: |x: str| to_first_lower(x));
         reg.register_helper("neqstr", Box::new(neqstr));
         reg.register_helper("eqstr", Box::new(eqstr));
+        reg.register_helper("eqstruct", Box::new(eqstruct));
         reg.register_helper("bignum", Box::new(bignum));
         reg.register_helper("isvoid", Box::new(isvoid));
         let processed_ns = process_namespaces(namespaces)?;
@@ -538,6 +543,13 @@ mod tests {
                         fixed_array: false,
                         tag: String::new(),
                     },
+                    Def {
+                      name: String::from("struct_test"),
+                      type_name: String::from("Test"),
+                      array_size: 0,
+                      fixed_array: false,
+                      tag: String::new(),
+                  },
                 ],
                 tag: String::new(),
             }],
@@ -555,5 +567,6 @@ mod tests {
         assert!(generated_code.contains("Unsigned_int_test uint32 `json:\"unsigned_int_test\"`"));
         assert!(generated_code.contains("Hyper_test int64 `json:\"hyper_test,string\"`"));
         assert!(generated_code.contains("Unsigned_hyper_test uint64 `json:\"unsigned_hyper_test,string\"`"));
+        assert!(generated_code.contains("Struct_test *Test `json:\"struct_test\"`"));
     }
 }

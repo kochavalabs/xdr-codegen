@@ -39,14 +39,14 @@ static TYPEDEFS_T: &str = r#"
 {{#if td.def.array_size}}
   {{#if td.def.fixed_array}}
   // {{td.def.name}} generated typedef
-  type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[{{td.def.array_size}}]{{/if}}{{td.def.type_name}}
+  type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[{{td.def.array_size}}]{{/if}}{{#if (eqstruct td.def.type_name)}}*{{/if}}{{td.def.type_name}}
   // XDRMaxSize implements the Sized interface for {{td.def.name}}
   func (s {{td.def.name}}) XDRMaxSize() int {
     return {{td.def.array_size}}
   }
   {{else}}
   // {{td.def.name}} generated typedef
-  type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{/if}}{{td.def.type_name}}
+  type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{#if (eqstruct td.def.type_name)}}*{{/if}}{{/if}}{{td.def.type_name}}
   {{/if}}
 {{else}}
   // {{td.def.name}} generated typedef
@@ -547,6 +547,42 @@ mod tests {
                         tag: String::new(),
                     },
                 },
+                Typedef {
+                    def: Def {
+                        name: String::from("arrayDef"),
+                        type_name: String::from("int"),
+                        array_size: 5,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                },
+                Typedef {
+                    def: Def {
+                        name: String::from("fixedArrayDef"),
+                        type_name: String::from("int"),
+                        array_size: 5,
+                        fixed_array: true,
+                        tag: String::new(),
+                    },
+                },
+                Typedef {
+                    def: Def {
+                        name: String::from("structArrayDef"),
+                        type_name: String::from("TestStruct"),
+                        array_size: 5,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                },
+                Typedef {
+                    def: Def {
+                        name: String::from("fixedStructArrayDef"),
+                        type_name: String::from("TestStruct"),
+                        array_size: 5,
+                        fixed_array: true,
+                        tag: String::new(),
+                    },
+                },
             ],
             unions: Vec::new(),
             name: String::from("test"),
@@ -559,6 +595,10 @@ mod tests {
         assert!(generated_code.contains("func (s *Testt) UnmarshalBinary(inp []byte) error"));
         assert!(generated_code.contains("type IntDef int32"));
         assert!(generated_code.contains("type StructDef TestStruct"));
+        assert!(generated_code.contains("type ArrayDef []int32"));
+        assert!(generated_code.contains("type FixedArrayDef [5]int32"));
+        assert!(generated_code.contains("type StructArrayDef []*TestStruct"));
+        assert!(generated_code.contains("type FixedStructArrayDef [5]*TestStruct"));
     }
     #[test]
     fn struct_namespace() {

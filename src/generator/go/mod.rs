@@ -37,17 +37,17 @@ static TYPEDEFS_T: &str = r#"
 
 {{#each ns.typedefs as |td| ~}}
 {{#if td.def.array_size}}
-{{#if td.def.fixed_array}}
-// {{td.def.name}} generated typedef
-type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[{{td.def.array_size}}]{{/if}}{{td.def.type_name}}
-// XDRMaxSize implements the Sized interface for {{td.def.name}}
-func (s {{td.def.name}}) XDRMaxSize() int {
-  return {{td.def.array_size}}
-}
-{{else}}
-// {{td.def.name}} generated typedef
-type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{/if}}{{td.def.type_name}}
-{{/if}}
+  {{#if td.def.fixed_array}}
+  // {{td.def.name}} generated typedef
+  type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[{{td.def.array_size}}]{{/if}}{{td.def.type_name}}
+  // XDRMaxSize implements the Sized interface for {{td.def.name}}
+  func (s {{td.def.name}}) XDRMaxSize() int {
+    return {{td.def.array_size}}
+  }
+  {{else}}
+  // {{td.def.name}} generated typedef
+  type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{/if}}{{td.def.type_name}}
+  {{/if}}
 {{/if}}
 
 // MarshalBinary implements encoding.BinaryMarshaler.
@@ -86,32 +86,17 @@ type {{st.name}} struct {
     {{prop.name}} string `json:"{{lower prop.name}}"`
   {{/if}}
 {{else}} {{#if prop.fixed_array}}
-  {{#if (eqstruct prop.type_name)}}
-    {{prop.name}} [{{prop.array_size}}]*{{prop.type_name}} `json:"{{lower prop.name}}"`
-  {{else}}
-    {{prop.name}} [{{prop.array_size}}]{{prop.type_name}} `json:"{{lower prop.name}}"`
-  {{/if}}
+  {{prop.name}} [{{prop.array_size}}]{{#if (eqstruct prop.type_name)}}*{{/if}}{{prop.type_name}} `json:"{{lower prop.name}}"`
 {{else}} {{#if prop.array_size}}
   {{#if (ne prop.array_size 2147483647)}}
-    {{#if (eqstruct prop.type_name)}}
-      {{prop.name}} []*{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
-    {{else}}
-      {{prop.name}} []{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
-    {{/if}}
+    {{prop.name}} []{{#if (eqstruct prop.type_name)}}*{{/if}}{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
   {{else}}
-    {{#if (eqstruct prop.type_name)}}
-      {{prop.name}} []*{{prop.type_name}} `json:"{{lower prop.name}}"`
-    {{else}}
-      {{prop.name}} []{{prop.type_name}} `json:"{{lower prop.name}}"`
-    {{/if}}
+    {{prop.name}} []{{#if (eqstruct prop.type_name)}}*{{/if}}{{prop.type_name}} `json:"{{lower prop.name}}"`
   {{/if}}
 {{else}} {{#if (bignum prop.type_name)}}
   {{prop.name}} {{prop.type_name}} `json:"{{lower prop.name}},string"`
-{{else}} {{#if (eqstruct prop.type_name)}}
-  {{prop.name}} *{{prop.type_name}} `json:"{{lower prop.name}}"`
 {{else}}
-  {{prop.name}} {{prop.type_name}} `json:"{{lower prop.name}}"`
-{{/if}}
+  {{prop.name}} {{#if (eqstruct prop.type_name)}}*{{/if}}{{prop.type_name}} `json:"{{lower prop.name}}"`
 {{/if}}
 {{/if}}
 {{/if}}

@@ -2,8 +2,6 @@ use super::*;
 use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext, RenderError};
 use std::collections::HashMap;
 
-use crate::handlebars::Renderable;
-
 static HEADER: &str = r#"
 // Package xdr is automatically generated
 // DO NOT EDIT or your changes may be overwritten
@@ -88,12 +86,24 @@ type {{st.name}} struct {
     {{prop.name}} string `json:"{{lower prop.name}}"`
   {{/if}}
 {{else}} {{#if prop.fixed_array}}
-  {{prop.name}} [{{prop.array_size}}]{{prop.type_name}} `json:"{{lower prop.name}}"`
+  {{#if (eqstruct prop.type_name)}}
+    {{prop.name}} [{{prop.array_size}}]*{{prop.type_name}} `json:"{{lower prop.name}}"`
+  {{else}}
+    {{prop.name}} [{{prop.array_size}}]{{prop.type_name}} `json:"{{lower prop.name}}"`
+  {{/if}}
 {{else}} {{#if prop.array_size}}
   {{#if (ne prop.array_size 2147483647)}}
-    {{prop.name}} []{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
+    {{#if (eqstruct prop.type_name)}}
+      {{prop.name}} []*{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
+    {{else}}
+      {{prop.name}} []{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
+    {{/if}}
   {{else}}
-    {{prop.name}} []{{prop.type_name}} `json:"{{lower prop.name}}"`
+    {{#if (eqstruct prop.type_name)}}
+      {{prop.name}} []*{{prop.type_name}} `json:"{{lower prop.name}}"`
+    {{else}}
+      {{prop.name}} []{{prop.type_name}} `json:"{{lower prop.name}}"`
+    {{/if}}
   {{/if}}
 {{else}} {{#if (bignum prop.type_name)}}
   {{prop.name}} {{prop.type_name}} `json:"{{lower prop.name}},string"`
@@ -594,6 +604,34 @@ mod tests {
                             fixed_array: false,
                             tag: String::new(),
                         },
+                        Def {
+                          name: String::from("array_test"),
+                          type_name: String::from("unsigned hyper"),
+                          array_size: 5,
+                          fixed_array: false,
+                          tag: String::new(),
+                        },
+                        Def {
+                          name: String::from("array_struct_test"),
+                          type_name: String::from("TestStruct2"),
+                          array_size: 5,
+                          fixed_array: false,
+                          tag: String::new(),
+                       },
+                       Def {
+                        name: String::from("fixed_array_test"),
+                        type_name: String::from("unsigned hyper"),
+                        array_size: 5,
+                        fixed_array: true,
+                        tag: String::new(),
+                      },
+                      Def {
+                        name: String::from("fixed_array_struct_test"),
+                        type_name: String::from("TestStruct2"),
+                        array_size: 5,
+                        fixed_array: true,
+                        tag: String::new(),
+                     },
                     ],
                     tag: String::new(),
                 },
@@ -625,5 +663,9 @@ mod tests {
         assert!(generated_code.contains("Hyper_test int64 `json:\"hyper_test,string\"`"));
         assert!(generated_code.contains("Unsigned_hyper_test uint64 `json:\"unsigned_hyper_test,string\"`"));
         assert!(generated_code.contains("Struct_test *TestStruct2 `json:\"struct_test\"`"));
+        assert!(generated_code.contains("Array_test []uint64 `xdrmaxsize:\"5\" json:\"array_test\"`"));
+        assert!(generated_code.contains("Array_struct_test []*TestStruct2 `xdrmaxsize:\"5\" json:\"array_struct_test\"`"));
+        assert!(generated_code.contains("Fixed_array_test [5]uint64 `json:\"fixed_array_test\"`"));
+        assert!(generated_code.contains("Fixed_array_struct_test [5]*TestStruct2 `json:\"fixed_array_struct_test\"`"));
     }
 }

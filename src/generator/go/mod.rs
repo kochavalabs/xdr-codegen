@@ -48,6 +48,9 @@ static TYPEDEFS_T: &str = r#"
   // {{td.def.name}} generated typedef
   type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{/if}}{{td.def.type_name}}
   {{/if}}
+{{else}}
+  // {{td.def.name}} generated typedef
+  type {{td.def.name}} {{td.def.type_name}}
 {{/if}}
 
 // MarshalBinary implements encoding.BinaryMarshaler.
@@ -216,7 +219,7 @@ switch {{uni.switch.enum_type}}(sw) {
 return "-", false
 }
 
-// New{{uni.name}} creates a new  {{uni.name}}.
+// New{{uni.name}} creates a new {{uni.name}}.
 func New{{uni.name}}(aType {{uni.switch.enum_type}}, value interface{}) (result {{uni.name}}, err error) {
   result.Type = aType
 switch {{uni.enum_type}}(aType) {
@@ -505,24 +508,57 @@ mod tests {
     fn typedef_namespace() {
         let input_test = vec![Namespace {
             enums: Vec::new(),
-            structs: Vec::new(),
-            typedefs: vec![Typedef {
-                def: Def {
-                    name: String::from("testt"),
+            structs: vec![Struct {
+                name: String::from("TestStruct"),
+                props: vec![Def {
+                    name: String::from("stringTest"),
                     type_name: String::from("string"),
                     array_size: 0,
                     fixed_array: false,
                     tag: String::new(),
-                },
+                }],
+                tag: String::new(),
             }],
+            typedefs: vec![
+                Typedef {
+                    def: Def {
+                        name: String::from("testt"),
+                        type_name: String::from("string"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                },
+                Typedef {
+                    def: Def {
+                        name: String::from("intDef"),
+                        type_name: String::from("int"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                },
+                Typedef {
+                    def: Def {
+                        name: String::from("structDef"),
+                        type_name: String::from("TestStruct"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                },
+            ],
             unions: Vec::new(),
             name: String::from("test"),
         }];
         let res = GoGenerator {}.code(input_test);
         assert!(res.is_ok());
         let generated_code = res.unwrap();
+        println!("{}", generated_code);
         assert!(generated_code.contains("func (s Testt) MarshalBinary() ([]byte, error)"));
         assert!(generated_code.contains("func (s *Testt) UnmarshalBinary(inp []byte) error"));
+        assert!(generated_code.contains("type IntDef int32"));
+        assert!(generated_code.contains("type StructDef TestStruct"));
     }
     #[test]
     fn struct_namespace() {

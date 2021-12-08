@@ -193,7 +193,7 @@ type {{uni.name}} struct{
     {{#if (eqstr case.ret_type.type_name)}}
         {{case.ret_type.name}} *{{case.ret_type.type_name}}
     {{else}} {{#if case.ret_type.array_size}}
-        {{case.ret_type.name}} *[]{{case.ret_type.type_name}}
+        {{case.ret_type.name}} []{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}}
     {{else}}
         {{case.ret_type.name}} *{{case.ret_type.type_name}}
     {{/if}} {{/if}}
@@ -249,7 +249,7 @@ switch {{uni.enum_type}}(aType) {
 // Must{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // panicing if the value is not set.
     {{#if (eqstr case.ret_type.type_name)}} func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
-    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Must{{case.ret_type.name}}() []{{case.ret_type.type_name}} {
+    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Must{{case.ret_type.name}}() []{{#if (eqstruct td.def.type_name)}}*{{/if}}{{case.ret_type.type_name}} {
     {{else}} func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
     {{/if}} {{/if}}
   val, ok := u.Get{{case.ret_type.name}}()
@@ -263,13 +263,13 @@ switch {{uni.enum_type}}(aType) {
 // Get{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // returning ok if the union's switch indicated the value is valid.
     {{#if (eqstr case.ret_type.type_name)}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
-    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result []{{case.ret_type.type_name}}, ok bool) {
+    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result []{{#if (eqstruct td.def.type_name)}}*{{/if}}{{case.ret_type.type_name}}, ok bool) {
     {{else}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
     {{/if}}{{/if}}
   armName, _ := u.ArmForSwitch(int32(u.Type))
 
   if armName == "{{case.ret_type.name}}" {
-    result = *u.{{case.ret_type.name}}
+    result = {{#unless case.ret_type.array_size}}{{#unless (eqstruct td.def.type_name)}}*{{/unless}}{{/unless}}u.{{case.ret_type.name}}
     ok = true
   }
 
@@ -332,7 +332,7 @@ func (u *{{uni.name}}) UnmarshalJSON(data []byte) error {
       {{#if (eqstr case.ret_type.type_name)}}
         {{case.ret_type.name}} {{case.ret_type.type_name}} `json:"data"`
       {{else}} {{#if case.ret_type.array_size}}
-          {{case.ret_type.name}} []{{case.ret_type.type_name}} `json:"data"`
+          {{case.ret_type.name}} []{{#if (eqstruct td.def.type_name)}}*{{/if}}{{case.ret_type.type_name}} `json:"data"`
                {{else}}
           {{case.ret_type.name}} {{case.ret_type.type_name}} `json:"data"`
                {{/if}}
@@ -342,7 +342,7 @@ func (u *{{uni.name}}) UnmarshalJSON(data []byte) error {
       if err != nil {
         return err
       }
-      u.{{case.ret_type.name}} = &response.{{case.ret_type.name}}
+      u.{{case.ret_type.name}} = {{#unless case.ret_type.array_size}}&{{/unless}}response.{{case.ret_type.name}}
     {{/if}}
   {{/each~}}
   default:
@@ -728,5 +728,92 @@ mod tests {
         assert!(generated_code.contains("Array_struct_test []*TestStruct2 `xdrmaxsize:\"5\" json:\"array_struct_test\"`"));
         assert!(generated_code.contains("Fixed_array_test [5]uint64 `json:\"fixed_array_test\"`"));
         assert!(generated_code.contains("Fixed_array_struct_test [5]*TestStruct2 `json:\"fixed_array_struct_test\"`"));
+    }
+    #[test]
+    fn typedef_union() {
+        let input_test = vec![Namespace {
+            enums: Vec::new(),
+            structs: vec![Struct {
+                name: String::from("TestStruct"),
+                props: vec![Def {
+                    name: String::from("stringTest"),
+                    type_name: String::from("string"),
+                    array_size: 0,
+                    fixed_array: false,
+                    tag: String::new(),
+                }],
+                tag: String::new(),
+            }],
+            typedefs: Vec::new(),
+            unions: vec![Union {
+                name: String::from("TestUnion"),
+                switch: Switch {
+                    enum_name: String::from("Type"),
+                    enum_type: String::from("enumType"),
+                    cases: vec![
+                        Case {
+                            value: String::from("ONE"),
+                            ret_type: Def {
+                                name: String::from("stringTest"),
+                                type_name: String::from("string"),
+                                array_size: 0,
+                                fixed_array: false,
+                                tag: String::new(),
+                            },
+                        },
+                        Case {
+                            value: String::from("TWO"),
+                            ret_type: Def {
+                                name: String::from("structTest"),
+                                type_name: String::from("TestStruct"),
+                                array_size: 0,
+                                fixed_array: false,
+                                tag: String::new(),
+                            },
+                        },
+                        Case {
+                            value: String::from("THREE"),
+                            ret_type: Def {
+                                name: String::from("arrayTest"),
+                                type_name: String::from("int"),
+                                array_size: 5,
+                                fixed_array: false,
+                                tag: String::new(),
+                            },
+                        },
+                        Case {
+                            value: String::from("FOUR"),
+                            ret_type: Def {
+                                name: String::from("arrayStructTest"),
+                                type_name: String::from("TestStruct"),
+                                array_size: 5,
+                                fixed_array: false,
+                                tag: String::new(),
+                            },
+                        },
+                    ],
+                },
+            }],
+            name: String::from("test"),
+        }];
+        let res = GoGenerator {}.code(input_test);
+        assert!(res.is_ok());
+        let generated_code = res.unwrap();
+        println!("{}", generated_code);
+        assert!(generated_code.contains("StringTest *string"));
+        assert!(generated_code.contains("result = *u.StringTest"));
+        assert!(generated_code.contains("u.StringTest = &response.StringTest"));
+
+        assert!(generated_code.contains("StructTest *TestStruct"));
+        assert!(generated_code.contains("result = *u.StructTest"));
+        assert!(generated_code.contains("u.StructTest = &response.StructTest"));
+
+        assert!(generated_code.contains("ArrayTest []int32"));
+        assert!(generated_code.contains("result = u.ArrayTest"));
+        assert!(generated_code.contains("u.ArrayTest = response.ArrayTest"));
+
+        assert!(generated_code.contains("ArrayStructTest []*TestStruct"));
+        assert!(generated_code.contains("result = u.ArrayStructTest"));
+        assert!(generated_code.contains("u.ArrayStructTest = response.ArrayStructTest"));
     }
 }

@@ -229,7 +229,7 @@ switch {{uni.enum_type}}(aType) {
     {{#if (eqstr case.ret_type.type_name)}}
         tv, ok := value.({{case.ret_type.type_name}})
     {{else}}{{#if case.ret_type.array_size}}
-        tv, ok := value.([]{{case.ret_type.type_name}})
+        tv, ok := value.([]{{#if (eqstruct td.def.type_name)}}*{{/if}}{{case.ret_type.type_name}})
     {{else}}
         tv, ok := value.({{case.ret_type.type_name}})
     {{/if}} {{/if}}
@@ -237,7 +237,7 @@ switch {{uni.enum_type}}(aType) {
         err = fmt.Errorf("invalid value, must be {{case.ret_type}}")
         return
     }
-    result.{{case.ret_type.name}} = &tv
+    result.{{case.ret_type.name}} = {{#unless case.ret_type.array_size}}&{{/unless}}tv
 {{/if}}
 {{/each~}}
 }
@@ -249,7 +249,7 @@ switch {{uni.enum_type}}(aType) {
 // Must{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // panicing if the value is not set.
     {{#if (eqstr case.ret_type.type_name)}} func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
-    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Must{{case.ret_type.name}}() []{{#if (eqstruct td.def.type_name)}}*{{/if}}{{case.ret_type.type_name}} {
+    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Must{{case.ret_type.name}}() []{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}} {
     {{else}} func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
     {{/if}} {{/if}}
   val, ok := u.Get{{case.ret_type.name}}()
@@ -263,8 +263,8 @@ switch {{uni.enum_type}}(aType) {
 // Get{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // returning ok if the union's switch indicated the value is valid.
     {{#if (eqstr case.ret_type.type_name)}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
-    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result []{{#if (eqstruct td.def.type_name)}}*{{/if}}{{case.ret_type.type_name}}, ok bool) {
-    {{else}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
+    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result []{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}}, ok bool) {
+    {{else}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}}, ok bool) {
     {{/if}}{{/if}}
   armName, _ := u.ArmForSwitch(int32(u.Type))
 
@@ -332,7 +332,7 @@ func (u *{{uni.name}}) UnmarshalJSON(data []byte) error {
       {{#if (eqstr case.ret_type.type_name)}}
         {{case.ret_type.name}} {{case.ret_type.type_name}} `json:"data"`
       {{else}} {{#if case.ret_type.array_size}}
-          {{case.ret_type.name}} []{{#if (eqstruct td.def.type_name)}}*{{/if}}{{case.ret_type.type_name}} `json:"data"`
+          {{case.ret_type.name}} []{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}} `json:"data"`
                {{else}}
           {{case.ret_type.name}} {{case.ret_type.type_name}} `json:"data"`
                {{/if}}
@@ -803,17 +803,25 @@ mod tests {
         assert!(generated_code.contains("StringTest *string"));
         assert!(generated_code.contains("result = *u.StringTest"));
         assert!(generated_code.contains("u.StringTest = &response.StringTest"));
+        assert!(generated_code.contains("func (u TestUnion) GetStringTest() (result string, ok bool) {"));
+        assert!(generated_code.contains("result.StringTest = &tv"));
 
         assert!(generated_code.contains("StructTest *TestStruct"));
         assert!(generated_code.contains("result = *u.StructTest"));
         assert!(generated_code.contains("u.StructTest = &response.StructTest"));
+        assert!(generated_code.contains("func (u TestUnion) GetStructTest() (result *TestStruct, ok bool) {"));
+        assert!(generated_code.contains("result.StructTest = &tv"));
 
         assert!(generated_code.contains("ArrayTest []int32"));
         assert!(generated_code.contains("result = u.ArrayTest"));
         assert!(generated_code.contains("u.ArrayTest = response.ArrayTest"));
+        assert!(generated_code.contains("func (u TestUnion) GetArrayTest() (result []int32, ok bool) {"));
+        assert!(generated_code.contains("result.ArrayTest = tv"));
 
         assert!(generated_code.contains("ArrayStructTest []*TestStruct"));
         assert!(generated_code.contains("result = u.ArrayStructTest"));
         assert!(generated_code.contains("u.ArrayStructTest = response.ArrayStructTest"));
+        assert!(generated_code.contains("func (u TestUnion) GetArrayStructTest() (result []*TestStruct, ok bool) {"));
+        assert!(generated_code.contains("result.ArrayStructTest = tv"));
     }
 }

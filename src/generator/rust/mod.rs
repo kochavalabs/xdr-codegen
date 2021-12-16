@@ -24,7 +24,7 @@ use std::io::Write;
 extern crate json;
 
 {{#each this as |ns| ~}}
-// Namspace start {{ns.name}}
+// Namespace start {{ns.name}}
 "#;
 
 static TYPEDEFS_T: &str = r#"
@@ -128,7 +128,7 @@ impl Default for {{uni.name}} {
 "#;
 
 static FOOTER: &str = r#"
-// Namspace end {{ns.name}}
+// Namespace end {{ns.name}}
 {{/each~}}"#;
 
 fn build_file_template() -> String {

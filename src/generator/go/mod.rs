@@ -556,4 +556,104 @@ mod tests {
         assert!(generated_code.contains("Hyper_test int64 `json:\"hyper_test,string\"`"));
         assert!(generated_code.contains("Unsigned_hyper_test uint64 `json:\"unsigned_hyper_test,string\"`"));
     }
+
+    #[test]
+    fn typedef_union() {
+        let input_test = vec![Namespace {
+            enums: Vec::new(),
+            structs: vec![Struct {
+                name: String::from("TestStruct"),
+                props: vec![Def {
+                    name: String::from("stringTest"),
+                    type_name: String::from("string"),
+                    array_size: 0,
+                    fixed_array: false,
+                    tag: String::new(),
+                }],
+                tag: String::new(),
+            }],
+            typedefs: Vec::new(),
+            unions: vec![Union {
+                name: String::from("TestUnion"),
+                switch: Switch {
+                    enum_name: String::from("Type"),
+                    enum_type: String::from("enumType"),
+                    cases: vec![
+                        Case {
+                            value: String::from("ONE"),
+                            ret_type: Def {
+                                name: String::from("stringTest"),
+                                type_name: String::from("string"),
+                                array_size: 0,
+                                fixed_array: false,
+                                tag: String::new(),
+                            },
+                        },
+                        Case {
+                            value: String::from("TWO"),
+                            ret_type: Def {
+                                name: String::from("structTest"),
+                                type_name: String::from("TestStruct"),
+                                array_size: 0,
+                                fixed_array: false,
+                                tag: String::new(),
+                            },
+                        },
+                        Case {
+                            value: String::from("THREE"),
+                            ret_type: Def {
+                                name: String::from("arrayTest"),
+                                type_name: String::from("int"),
+                                array_size: 5,
+                                fixed_array: false,
+                                tag: String::new(),
+                            },
+                        },
+                        Case {
+                            value: String::from("FOUR"),
+                            ret_type: Def {
+                                name: String::from("arrayStructTest"),
+                                type_name: String::from("TestStruct"),
+                                array_size: 5,
+                                fixed_array: false,
+                                tag: String::new(),
+                            },
+                        },
+                    ],
+                },
+            }],
+            name: String::from("test"),
+        }];
+        let res = GoGenerator {}.code(input_test);
+        assert!(res.is_ok());
+        let generated_code = res.unwrap();
+        println!("{}", generated_code);
+        assert!(generated_code.contains("StringTest *string"));
+        assert!(generated_code.contains("result = *u.StringTest"));
+        assert!(generated_code.contains("u.StringTest = &response.StringTest"));
+        assert!(generated_code.contains("func (u TestUnion) MustStringTest() string {"));
+        assert!(generated_code.contains("func (u TestUnion) GetStringTest() (result string, ok bool) {"));
+        assert!(generated_code.contains("result.StringTest = &tv"));
+
+        assert!(generated_code.contains("StructTest *TestStruct"));
+        assert!(generated_code.contains("result = *u.StructTest"));
+        assert!(generated_code.contains("u.StructTest = &response.StructTest"));
+        assert!(generated_code.contains("func (u TestUnion) MustStructTest() TestStruct {"));
+        assert!(generated_code.contains("func (u TestUnion) GetStructTest() (result TestStruct, ok bool) {"));
+        assert!(generated_code.contains("result.StructTest = &tv"));
+
+        assert!(generated_code.contains("ArrayTest []int32"));
+        assert!(generated_code.contains("result = *u.ArrayTest"));
+        assert!(generated_code.contains("u.ArrayTest = &response.ArrayTest"));
+        assert!(generated_code.contains("func (u TestUnion) MustArrayTest() []int32 {"));
+        assert!(generated_code.contains("func (u TestUnion) GetArrayTest() (result []int32, ok bool) {"));
+        assert!(generated_code.contains("result.ArrayTest = &tv"));
+
+        assert!(generated_code.contains("ArrayStructTest []TestStruct"));
+        assert!(generated_code.contains("result = *u.ArrayStructTest"));
+        assert!(generated_code.contains("u.ArrayStructTest = &response.ArrayStructTest"));
+        assert!(generated_code.contains("func (u TestUnion) MustArrayStructTest() []TestStruct {"));
+        assert!(generated_code.contains("func (u TestUnion) GetArrayStructTest() (result []TestStruct, ok bool) {"));
+        assert!(generated_code.contains("result.ArrayStructTest = &tv"));
+    }
 }

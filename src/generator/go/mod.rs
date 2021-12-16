@@ -558,7 +558,7 @@ mod tests {
     }
 
     #[test]
-    fn typedef_union() {
+    fn union_namespace() {
         let input_test = vec![Namespace {
             enums: Vec::new(),
             structs: vec![Struct {

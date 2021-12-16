@@ -33,6 +33,10 @@ struct Opt {
     /// Output language
     #[structopt(short = "l", long = "language")]
     language: Option<String>,
+
+    /// Include macro_use for xdr_rs_serialize_derive crate in Rust
+    #[structopt(short = "m", long = "macro")]
+    include_macro: bool,
 }
 
 fn main() -> io::Result<()> {
@@ -55,11 +59,15 @@ fn main() -> io::Result<()> {
 
     let namespaces = ast::build_namespaces(buffer).unwrap();
 
+    let rust_generator;
     let generator: &dyn generator::CodeGenerator = match opt.language {
         Some(language) => match language.as_ref() {
             "go" => &generator::go::GoGenerator {},
             "js" => &generator::js::JsGenerator {},
-            "rust" => &generator::rust::RustGenerator {},
+            "rust" => {
+                rust_generator = generator::rust::RustGenerator {include_macro: opt.include_macro};
+                &rust_generator
+            },
             "commonjs" => &generator::commonjs::CommonJsGenerator {},
             _ => panic!("Invalid language selection. Options: go, js, rust commonjs"),
         },

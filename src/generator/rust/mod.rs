@@ -1,5 +1,5 @@
 use super::*;
-use handlebars::{Handlebars, Helper, Context, RenderContext, Output, HelperResult};
+use handlebars::{Context, Handlebars, Helper, HelperResult, Output, RenderContext};
 
 static HEADER: &str = r#"
 #![allow(non_snake_case)]
@@ -136,7 +136,7 @@ fn build_file_template() -> String {
 }
 
 pub struct RustGenerator {
-  pub include_macro: bool,
+    pub include_macro: bool,
 }
 
 fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'static str> {
@@ -163,14 +163,20 @@ impl CodeGenerator for RustGenerator {
         reg.register_helper("neqstr", Box::new(neqstr));
         reg.register_helper("eqstr", Box::new(eqstr));
         reg.register_helper("isvoid", Box::new(isvoid));
-        reg.register_helper("macro-use", 
-          Box::new(|_h: &Helper, _r: &Handlebars, _: &Context, _rc: &mut RenderContext, out: &mut dyn Output| -> HelperResult {
-            if self.include_macro {
-            out.write("#[macro_use]
-extern crate xdr_rs_serialize_derive;")?;
-            }
-            Ok(())
-        }));
+        reg.register_helper(
+            "macro-use",
+            Box::new(
+                |_h: &Helper, _r: &Handlebars, _: &Context, _rc: &mut RenderContext, out: &mut dyn Output| -> HelperResult {
+                    if self.include_macro {
+                        out.write(
+                            "#[macro_use]
+extern crate xdr_rs_serialize_derive;",
+                        )?;
+                    }
+                    Ok(())
+                },
+            ),
+        );
         let processed_ns = process_namespaces(namespaces)?;
         let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed_ns).unwrap();
 
@@ -190,7 +196,7 @@ mod tests {
             unions: Vec::new(),
             name: String::from("test"),
         }];
-        let res = RustGenerator {include_macro: false}.code(input_test);
+        let res = RustGenerator { include_macro: false }.code(input_test);
         assert!(res.is_ok());
         let generated_code = res.unwrap();
         println!("{}", generated_code);
@@ -199,18 +205,20 @@ mod tests {
 
     #[test]
     fn with_macro() {
-      let input_test = vec![Namespace {
-          enums: Vec::new(),
-          structs: Vec::new(),
-          typedefs: Vec::new(),
-          unions: Vec::new(),
-          name: String::from("test"),
-      }];
-      let res = RustGenerator {include_macro: true}.code(input_test);
-      assert!(res.is_ok());
-      let generated_code = res.unwrap();
-      println!("{}", generated_code);
-      assert!(generated_code.contains("#[macro_use]
-extern crate xdr_rs_serialize_derive;"));
-  }
+        let input_test = vec![Namespace {
+            enums: Vec::new(),
+            structs: Vec::new(),
+            typedefs: Vec::new(),
+            unions: Vec::new(),
+            name: String::from("test"),
+        }];
+        let res = RustGenerator { include_macro: true }.code(input_test);
+        assert!(res.is_ok());
+        let generated_code = res.unwrap();
+        println!("{}", generated_code);
+        assert!(generated_code.contains(
+            "#[macro_use]
+extern crate xdr_rs_serialize_derive;"
+        ));
+    }
 }

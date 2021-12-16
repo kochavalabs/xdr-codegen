@@ -153,7 +153,7 @@ func (s {{enum.name}}) ValidEnum(v int32) bool {
 }
 // String returns the name of `e`
 func (s {{enum.name}}) String() string {
-  name, _ := {{enum.name}}Map[int32(s)]
+  name := {{enum.name}}Map[int32(s)]
   return name
 }
 
@@ -216,7 +216,7 @@ switch {{uni.switch.enum_type}}(sw) {
 return "-", false
 }
 
-// New{{uni.name}} creates a new  {{uni.name}}.
+// New{{uni.name}} creates a new {{uni.name}}.
 func New{{uni.name}}(aType {{uni.switch.enum_type}}, value interface{}) (result {{uni.name}}, err error) {
   result.Type = aType
 switch {{uni.enum_type}}(aType) {

@@ -1,5 +1,5 @@
 use super::*;
-use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext, RenderError};
+use handlebars::Handlebars;
 use std::collections::HashMap;
 
 static HEADER: &str = r#"
@@ -37,20 +37,17 @@ static TYPEDEFS_T: &str = r#"
 
 {{#each ns.typedefs as |td| ~}}
 {{#if td.def.array_size}}
-  {{#if td.def.fixed_array}}
-  // {{td.def.name}} generated typedef
-  type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[{{td.def.array_size}}]{{/if}}{{#if (eqstruct td.def.type_name)}}*{{/if}}{{td.def.type_name}}
-  // XDRMaxSize implements the Sized interface for {{td.def.name}}
-  func (s {{td.def.name}}) XDRMaxSize() int {
-    return {{td.def.array_size}}
-  }
-  {{else}}
-  // {{td.def.name}} generated typedef
-  type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{#if (eqstruct td.def.type_name)}}*{{/if}}{{/if}}{{td.def.type_name}}
-  {{/if}}
+{{#if td.def.fixed_array}}
+// {{td.def.name}} generated typedef
+type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[{{td.def.array_size}}]{{/if}}{{td.def.type_name}}
+// XDRMaxSize implements the Sized interface for {{td.def.name}}
+func (s {{td.def.name}}) XDRMaxSize() int {
+  return {{td.def.array_size}}
+}
 {{else}}
-  // {{td.def.name}} generated typedef
-  type {{td.def.name}} {{td.def.type_name}}
+// {{td.def.name}} generated typedef
+type {{td.def.name}} {{#if (neqstr td.def.type_name) }}[]{{/if}}{{td.def.type_name}}
+{{/if}}
 {{/if}}
 
 // MarshalBinary implements encoding.BinaryMarshaler.
@@ -89,17 +86,17 @@ type {{st.name}} struct {
     {{prop.name}} string `json:"{{lower prop.name}}"`
   {{/if}}
 {{else}} {{#if prop.fixed_array}}
-  {{prop.name}} [{{prop.array_size}}]{{#if (eqstruct prop.type_name)}}*{{/if}}{{prop.type_name}} `json:"{{lower prop.name}}"`
+  {{prop.name}} [{{prop.array_size}}]{{prop.type_name}} `json:"{{lower prop.name}}"`
 {{else}} {{#if prop.array_size}}
   {{#if (ne prop.array_size 2147483647)}}
-    {{prop.name}} []{{#if (eqstruct prop.type_name)}}*{{/if}}{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
+    {{prop.name}} []{{prop.type_name}} `xdrmaxsize:"{{prop.array_size}}" json:"{{lower prop.name}}"`
   {{else}}
-    {{prop.name}} []{{#if (eqstruct prop.type_name)}}*{{/if}}{{prop.type_name}} `json:"{{lower prop.name}}"`
+    {{prop.name}} []{{prop.type_name}} `json:"{{lower prop.name}}"`
   {{/if}}
 {{else}} {{#if (bignum prop.type_name)}}
   {{prop.name}} {{prop.type_name}} `json:"{{lower prop.name}},string"`
 {{else}}
-  {{prop.name}} {{#if (eqstruct prop.type_name)}}*{{/if}}{{prop.type_name}} `json:"{{lower prop.name}}"`
+  {{prop.name}} {{prop.type_name}} `json:"{{lower prop.name}}"`
 {{/if}}
 {{/if}}
 {{/if}}
@@ -193,7 +190,7 @@ type {{uni.name}} struct{
     {{#if (eqstr case.ret_type.type_name)}}
         {{case.ret_type.name}} *{{case.ret_type.type_name}}
     {{else}} {{#if case.ret_type.array_size}}
-        {{case.ret_type.name}} []{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}}
+        {{case.ret_type.name}} *[]{{case.ret_type.type_name}}
     {{else}}
         {{case.ret_type.name}} *{{case.ret_type.type_name}}
     {{/if}} {{/if}}
@@ -229,7 +226,7 @@ switch {{uni.enum_type}}(aType) {
     {{#if (eqstr case.ret_type.type_name)}}
         tv, ok := value.({{case.ret_type.type_name}})
     {{else}}{{#if case.ret_type.array_size}}
-        tv, ok := value.([]{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}})
+        tv, ok := value.([]{{case.ret_type.type_name}})
     {{else}}
         tv, ok := value.({{case.ret_type.type_name}})
     {{/if}} {{/if}}
@@ -237,7 +234,7 @@ switch {{uni.enum_type}}(aType) {
         err = fmt.Errorf("invalid value, must be {{case.ret_type}}")
         return
     }
-    result.{{case.ret_type.name}} = {{#unless case.ret_type.array_size}}&{{/unless}}tv
+    result.{{case.ret_type.name}} = &tv
 {{/if}}
 {{/each~}}
 }
@@ -249,8 +246,8 @@ switch {{uni.enum_type}}(aType) {
 // Must{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // panicing if the value is not set.
     {{#if (eqstr case.ret_type.type_name)}} func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
-    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Must{{case.ret_type.name}}() []{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}} {
-    {{else}} func (u {{uni.name}}) Must{{case.ret_type.name}}() {{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}} {
+    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Must{{case.ret_type.name}}() []{{case.ret_type.type_name}} {
+    {{else}} func (u {{uni.name}}) Must{{case.ret_type.name}}() {{case.ret_type.type_name}} {
     {{/if}} {{/if}}
   val, ok := u.Get{{case.ret_type.name}}()
   if !ok {
@@ -263,13 +260,13 @@ switch {{uni.enum_type}}(aType) {
 // Get{{case.ret_type.name}} retrieves the {{case.ret_type.name}} value from the union,
 // returning ok if the union's switch indicated the value is valid.
     {{#if (eqstr case.ret_type.type_name)}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
-    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result []{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}}, ok bool) {
-    {{else}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}}, ok bool) {
+    {{else}}{{#if case.ret_type.array_size}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result []{{case.ret_type.type_name}}, ok bool) {
+    {{else}} func (u {{uni.name}}) Get{{case.ret_type.name}}() (result {{case.ret_type.type_name}}, ok bool) {
     {{/if}}{{/if}}
   armName, _ := u.ArmForSwitch(int32(u.Type))
 
   if armName == "{{case.ret_type.name}}" {
-    result = {{#unless case.ret_type.array_size}}{{#unless (eqstruct case.ret_type.type_name)}}*{{/unless}}{{/unless}}u.{{case.ret_type.name}}
+    result = *u.{{case.ret_type.name}}
     ok = true
   }
 
@@ -332,7 +329,7 @@ func (u *{{uni.name}}) UnmarshalJSON(data []byte) error {
       {{#if (eqstr case.ret_type.type_name)}}
         {{case.ret_type.name}} {{case.ret_type.type_name}} `json:"data"`
       {{else}} {{#if case.ret_type.array_size}}
-          {{case.ret_type.name}} []{{#if (eqstruct case.ret_type.type_name)}}*{{/if}}{{case.ret_type.type_name}} `json:"data"`
+          {{case.ret_type.name}} []{{case.ret_type.type_name}} `json:"data"`
                {{else}}
           {{case.ret_type.name}} {{case.ret_type.type_name}} `json:"data"`
                {{/if}}
@@ -342,7 +339,7 @@ func (u *{{uni.name}}) UnmarshalJSON(data []byte) error {
       if err != nil {
         return err
       }
-      u.{{case.ret_type.name}} = {{#unless case.ret_type.array_size}}&{{/unless}}response.{{case.ret_type.name}}
+      u.{{case.ret_type.name}} = &response.{{case.ret_type.name}}
     {{/if}}
   {{/each~}}
   default:
@@ -425,52 +422,10 @@ fn to_first_lower(value: &str) -> String {
     }
 }
 
-// implement by a structure impls HelperDef
-#[derive(Clone)]
-struct StructHelper {
-    struct_map: HashMap<String, bool>,
-}
-
-impl HelperDef for StructHelper {
-    fn call<'reg: 'rc, 'rc>(
-        &self,
-        h: &Helper<'reg, 'rc>,
-        _: &'reg Handlebars,
-        _: &'rc Context,
-        _: &mut RenderContext<'reg, 'rc>,
-        out: &mut dyn Output,
-    ) -> HelperResult {
-        let param = h
-            .param(0)
-            .ok_or_else(|| RenderError::new("Param not found for helper \"eqstruct\""))?;
-
-        // Remove beginning and ending quote from json string to get key
-        let input = &param.value().to_string();
-        let key = &input[1..input.len() - 1];
-
-        if self.struct_map.contains_key(key) {
-            out.write("true")?;
-        }
-
-        Ok(())
-    }
-}
-
 impl CodeGenerator for GoGenerator {
     fn code(&self, namespaces: Vec<Namespace>) -> Result<String, &'static str> {
         let mut reg = Handlebars::new();
         let file_t = build_file_template();
-
-        // Get a map of struct names used
-        let mut struct_map: HashMap<String, bool> = HashMap::new();
-        for namespace in namespaces.clone() {
-            for struct_ in namespace.structs {
-                struct_map.insert(struct_.name, true);
-            }
-        }
-
-        let struct_helper = StructHelper { struct_map: struct_map };
-
         handlebars_helper!(neqstr: |x: str| x != "string");
         handlebars_helper!(eqstr: |x: str| x == "string");
         handlebars_helper!(bignum: |x: str| x == "uint64" || x =="int64");
@@ -478,7 +433,6 @@ impl CodeGenerator for GoGenerator {
         handlebars_helper!(lower: |x: str| to_first_lower(x));
         reg.register_helper("neqstr", Box::new(neqstr));
         reg.register_helper("eqstr", Box::new(eqstr));
-        reg.register_helper("eqstruct", Box::new(struct_helper));
         reg.register_helper("bignum", Box::new(bignum));
         reg.register_helper("isvoid", Box::new(isvoid));
         let processed_ns = process_namespaces(namespaces)?;
@@ -508,213 +462,91 @@ mod tests {
     fn typedef_namespace() {
         let input_test = vec![Namespace {
             enums: Vec::new(),
-            structs: vec![Struct {
-                name: String::from("TestStruct"),
-                props: vec![Def {
-                    name: String::from("stringTest"),
+            structs: Vec::new(),
+            typedefs: vec![Typedef {
+                def: Def {
+                    name: String::from("testt"),
                     type_name: String::from("string"),
                     array_size: 0,
                     fixed_array: false,
                     tag: String::new(),
-                }],
-                tag: String::new(),
+                },
             }],
-            typedefs: vec![
-                Typedef {
-                    def: Def {
-                        name: String::from("testt"),
-                        type_name: String::from("string"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                },
-                Typedef {
-                    def: Def {
-                        name: String::from("intDef"),
-                        type_name: String::from("int"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                },
-                Typedef {
-                    def: Def {
-                        name: String::from("structDef"),
-                        type_name: String::from("TestStruct"),
-                        array_size: 0,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                },
-                Typedef {
-                    def: Def {
-                        name: String::from("arrayDef"),
-                        type_name: String::from("int"),
-                        array_size: 5,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                },
-                Typedef {
-                    def: Def {
-                        name: String::from("fixedArrayDef"),
-                        type_name: String::from("int"),
-                        array_size: 5,
-                        fixed_array: true,
-                        tag: String::new(),
-                    },
-                },
-                Typedef {
-                    def: Def {
-                        name: String::from("structArrayDef"),
-                        type_name: String::from("TestStruct"),
-                        array_size: 5,
-                        fixed_array: false,
-                        tag: String::new(),
-                    },
-                },
-                Typedef {
-                    def: Def {
-                        name: String::from("fixedStructArrayDef"),
-                        type_name: String::from("TestStruct"),
-                        array_size: 5,
-                        fixed_array: true,
-                        tag: String::new(),
-                    },
-                },
-            ],
             unions: Vec::new(),
             name: String::from("test"),
         }];
         let res = GoGenerator {}.code(input_test);
         assert!(res.is_ok());
         let generated_code = res.unwrap();
-        println!("{}", generated_code);
         assert!(generated_code.contains("func (s Testt) MarshalBinary() ([]byte, error)"));
         assert!(generated_code.contains("func (s *Testt) UnmarshalBinary(inp []byte) error"));
-        assert!(generated_code.contains("type IntDef int32"));
-        assert!(generated_code.contains("type StructDef TestStruct"));
-        assert!(generated_code.contains("type ArrayDef []int32"));
-        assert!(generated_code.contains("type FixedArrayDef [5]int32"));
-        assert!(generated_code.contains("type StructArrayDef []*TestStruct"));
-        assert!(generated_code.contains("type FixedStructArrayDef [5]*TestStruct"));
     }
     #[test]
     fn struct_namespace() {
         let input_test = vec![Namespace {
             enums: Vec::new(),
             typedefs: Vec::new(),
-            structs: vec![
-                Struct {
-                    name: String::from("TestStruct"),
-                    props: vec![
-                        Def {
-                            name: String::from("stringTest"),
-                            type_name: String::from("string"),
-                            array_size: 0,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("BooleanTest"),
-                            type_name: String::from("boolean"),
-                            array_size: 0,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("float_test"),
-                            type_name: String::from("float"),
-                            array_size: 0,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("int_test"),
-                            type_name: String::from("int"),
-                            array_size: 0,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("unsigned_int_test"),
-                            type_name: String::from("unsigned int"),
-                            array_size: 0,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("hyper_test"),
-                            type_name: String::from("hyper"),
-                            array_size: 0,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("unsigned_hyper_test"),
-                            type_name: String::from("unsigned hyper"),
-                            array_size: 0,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("struct_test"),
-                            type_name: String::from("TestStruct2"),
-                            array_size: 0,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("array_test"),
-                            type_name: String::from("unsigned hyper"),
-                            array_size: 5,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("array_struct_test"),
-                            type_name: String::from("TestStruct2"),
-                            array_size: 5,
-                            fixed_array: false,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("fixed_array_test"),
-                            type_name: String::from("unsigned hyper"),
-                            array_size: 5,
-                            fixed_array: true,
-                            tag: String::new(),
-                        },
-                        Def {
-                            name: String::from("fixed_array_struct_test"),
-                            type_name: String::from("TestStruct2"),
-                            array_size: 5,
-                            fixed_array: true,
-                            tag: String::new(),
-                        },
-                    ],
-                    tag: String::new(),
-                },
-                Struct {
-                    name: String::from("TestStruct2"),
-                    props: vec![Def {
+            structs: vec![Struct {
+                name: String::from("TestStruct"),
+                props: vec![
+                    Def {
                         name: String::from("stringTest"),
                         type_name: String::from("string"),
                         array_size: 0,
                         fixed_array: false,
                         tag: String::new(),
-                    }],
-                    tag: String::new(),
-                },
-            ],
+                    },
+                    Def {
+                        name: String::from("BooleanTest"),
+                        type_name: String::from("boolean"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                    Def {
+                        name: String::from("float_test"),
+                        type_name: String::from("float"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                    Def {
+                        name: String::from("int_test"),
+                        type_name: String::from("int"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                    Def {
+                        name: String::from("unsigned_int_test"),
+                        type_name: String::from("unsigned int"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                    Def {
+                        name: String::from("hyper_test"),
+                        type_name: String::from("hyper"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                    Def {
+                        name: String::from("unsigned_hyper_test"),
+                        type_name: String::from("unsigned hyper"),
+                        array_size: 0,
+                        fixed_array: false,
+                        tag: String::new(),
+                    },
+                ],
+                tag: String::new(),
+            }],
             unions: Vec::new(),
             name: String::from("test"),
         }];
         let res = GoGenerator {}.code(input_test);
         assert!(res.is_ok());
         let generated_code = res.unwrap();
-        println!("{}", generated_code);
         assert!(generated_code.contains("type TestStruct struct {"));
         assert!(generated_code.contains("StringTest string `json:\"stringTest\"`"));
         assert!(generated_code.contains("BooleanTest bool `json:\"booleanTest\"`"));
@@ -723,14 +555,10 @@ mod tests {
         assert!(generated_code.contains("Unsigned_int_test uint32 `json:\"unsigned_int_test\"`"));
         assert!(generated_code.contains("Hyper_test int64 `json:\"hyper_test,string\"`"));
         assert!(generated_code.contains("Unsigned_hyper_test uint64 `json:\"unsigned_hyper_test,string\"`"));
-        assert!(generated_code.contains("Struct_test *TestStruct2 `json:\"struct_test\"`"));
-        assert!(generated_code.contains("Array_test []uint64 `xdrmaxsize:\"5\" json:\"array_test\"`"));
-        assert!(generated_code.contains("Array_struct_test []*TestStruct2 `xdrmaxsize:\"5\" json:\"array_struct_test\"`"));
-        assert!(generated_code.contains("Fixed_array_test [5]uint64 `json:\"fixed_array_test\"`"));
-        assert!(generated_code.contains("Fixed_array_struct_test [5]*TestStruct2 `json:\"fixed_array_struct_test\"`"));
     }
+
     #[test]
-    fn typedef_union() {
+    fn union_namespace() {
         let input_test = vec![Namespace {
             enums: Vec::new(),
             structs: vec![Struct {
@@ -808,24 +636,24 @@ mod tests {
         assert!(generated_code.contains("result.StringTest = &tv"));
 
         assert!(generated_code.contains("StructTest *TestStruct"));
-        assert!(generated_code.contains("result = u.StructTest"));
+        assert!(generated_code.contains("result = *u.StructTest"));
         assert!(generated_code.contains("u.StructTest = &response.StructTest"));
-        assert!(generated_code.contains("func (u TestUnion) MustStructTest() *TestStruct {"));
-        assert!(generated_code.contains("func (u TestUnion) GetStructTest() (result *TestStruct, ok bool) {"));
+        assert!(generated_code.contains("func (u TestUnion) MustStructTest() TestStruct {"));
+        assert!(generated_code.contains("func (u TestUnion) GetStructTest() (result TestStruct, ok bool) {"));
         assert!(generated_code.contains("result.StructTest = &tv"));
 
         assert!(generated_code.contains("ArrayTest []int32"));
-        assert!(generated_code.contains("result = u.ArrayTest"));
-        assert!(generated_code.contains("u.ArrayTest = response.ArrayTest"));
+        assert!(generated_code.contains("result = *u.ArrayTest"));
+        assert!(generated_code.contains("u.ArrayTest = &response.ArrayTest"));
         assert!(generated_code.contains("func (u TestUnion) MustArrayTest() []int32 {"));
         assert!(generated_code.contains("func (u TestUnion) GetArrayTest() (result []int32, ok bool) {"));
-        assert!(generated_code.contains("result.ArrayTest = tv"));
+        assert!(generated_code.contains("result.ArrayTest = &tv"));
 
-        assert!(generated_code.contains("ArrayStructTest []*TestStruct"));
-        assert!(generated_code.contains("result = u.ArrayStructTest"));
-        assert!(generated_code.contains("u.ArrayStructTest = response.ArrayStructTest"));
-        assert!(generated_code.contains("func (u TestUnion) MustArrayStructTest() []*TestStruct {"));
-        assert!(generated_code.contains("func (u TestUnion) GetArrayStructTest() (result []*TestStruct, ok bool) {"));
-        assert!(generated_code.contains("result.ArrayStructTest = tv"));
+        assert!(generated_code.contains("ArrayStructTest []TestStruct"));
+        assert!(generated_code.contains("result = *u.ArrayStructTest"));
+        assert!(generated_code.contains("u.ArrayStructTest = &response.ArrayStructTest"));
+        assert!(generated_code.contains("func (u TestUnion) MustArrayStructTest() []TestStruct {"));
+        assert!(generated_code.contains("func (u TestUnion) GetArrayStructTest() (result []TestStruct, ok bool) {"));
+        assert!(generated_code.contains("result.ArrayStructTest = &tv"));
     }
 }

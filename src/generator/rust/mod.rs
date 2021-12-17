@@ -1,11 +1,10 @@
 use super::*;
-use handlebars::Handlebars;
+use handlebars::{Context, Handlebars, Helper, HelperResult, Output, RenderContext};
 
 static HEADER: &str = r#"
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
-#[macro_use]
-extern crate xdr_rs_serialize_derive;
+{{macro-use}}
 #[allow(unused_imports)]
 use xdr_rs_serialize::de::{
     read_fixed_array, read_fixed_array_json, read_fixed_opaque, read_fixed_opaque_json,
@@ -25,7 +24,7 @@ use std::io::Write;
 extern crate json;
 
 {{#each this as |ns| ~}}
-// Namspace start {{ns.name}}
+// Namespace start {{ns.name}}
 "#;
 
 static TYPEDEFS_T: &str = r#"
@@ -129,14 +128,16 @@ impl Default for {{uni.name}} {
 "#;
 
 static FOOTER: &str = r#"
-// Namspace end {{ns.name}}
+// Namespace end {{ns.name}}
 {{/each~}}"#;
 
 fn build_file_template() -> String {
     format!("{}{}{}{}{}{}", HEADER, TYPEDEFS_T, STRUCTS_T, ENUM_T, UNION_T, FOOTER)
 }
 
-pub struct RustGenerator {}
+pub struct RustGenerator {
+    pub include_macro: bool,
+}
 
 fn process_namespaces(namespaces: Vec<Namespace>) -> Result<Vec<Namespace>, &'static str> {
     let mut type_map = HashMap::new();
@@ -162,9 +163,62 @@ impl CodeGenerator for RustGenerator {
         reg.register_helper("neqstr", Box::new(neqstr));
         reg.register_helper("eqstr", Box::new(eqstr));
         reg.register_helper("isvoid", Box::new(isvoid));
+        reg.register_helper(
+            "macro-use",
+            Box::new(
+                |_h: &Helper, _r: &Handlebars, _: &Context, _rc: &mut RenderContext, out: &mut dyn Output| -> HelperResult {
+                    if self.include_macro {
+                        out.write(
+                            "#[macro_use]
+extern crate xdr_rs_serialize_derive;",
+                        )?;
+                    }
+                    Ok(())
+                },
+            ),
+        );
         let processed_ns = process_namespaces(namespaces)?;
         let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed_ns).unwrap();
 
         return Ok(result);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn without_macro() {
+        let input_test = vec![Namespace {
+            enums: Vec::new(),
+            structs: Vec::new(),
+            typedefs: Vec::new(),
+            unions: Vec::new(),
+            name: String::from("test"),
+        }];
+        let res = RustGenerator { include_macro: false }.code(input_test);
+        assert!(res.is_ok());
+        let generated_code = res.unwrap();
+        println!("{}", generated_code);
+        assert!(!generated_code.contains("#[macro_use]"));
+    }
+
+    #[test]
+    fn with_macro() {
+        let input_test = vec![Namespace {
+            enums: Vec::new(),
+            structs: Vec::new(),
+            typedefs: Vec::new(),
+            unions: Vec::new(),
+            name: String::from("test"),
+        }];
+        let res = RustGenerator { include_macro: true }.code(input_test);
+        assert!(res.is_ok());
+        let generated_code = res.unwrap();
+        println!("{}", generated_code);
+        assert!(generated_code.contains(
+            "#[macro_use]
+extern crate xdr_rs_serialize_derive;"
+        ));
     }
 }

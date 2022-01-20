@@ -152,6 +152,7 @@ impl CodeGenerator for CommonJsGenerator {
         handlebars_helper!(isvoid: |x: str| x == "");
         reg.register_helper("isvoid", Box::new(isvoid));
         reg.register_helper("typeconv", Box::new(typeconv));
+        reg.register_escape_fn(|s| s.into());
         let result = reg.render_template(file_t.into_boxed_str().as_ref(), &processed).unwrap();
 
         return Ok(result);

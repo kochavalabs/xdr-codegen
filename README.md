@@ -31,7 +31,3 @@ cargo run test.x --language go # | gofmt
 # Commonjs generation
 cargo run test.x --language commonjs # | eslint --stdin
 ```
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
